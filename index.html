@@ -1,0 +1,78 @@
+<html>
+<head>
+    <title>Network Supervision</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%
+        }
+    </style>
+    <!-- Angular Version Scripts -->
+    <script src="https://infra-pprod.septeo.fr/Skins/AngularAdmin/assets/vendors/angular/angular.min.js"></script>
+    <script src="https://infra-pprod.septeo.fr/Skins/AngularAdmin/assets/vendors/angular-route/angular-route.min.js"></script>
+    <script src="https://infra-pprod.septeo.fr/Skins/AngularAdmin/assets/vendors/angular-sanitize/angular-sanitize.min.js"></script>
+    <script src="https://infra-pprod.septeo.fr/Skins/AngularAdmin/assets/vendors/angular-nl2br/angular-nl2br.js"></script>
+
+    <!--<script src="lib/controls/ParcInfraControls.js"></script>-->
+    <script src="lib/libs/tween.min.js"></script>
+</head>
+<body>
+<div id="infra_map" style="width: 100%;height:100%"></div>
+<script type="importmap">
+    {
+        "imports": {
+            "three": "./node_modules/three/build/three.module.min.js",
+            "three-mesh-ui": "./node_modules/three-mesh-ui/build/three-mesh-ui.module.min.js",
+            "dat.gui": "./node_modules/dat.gui/build/dat.gui.module.js"
+        }
+    }
+    </script>
+<script type="module">
+  import { home } from './home.js'
+  import { site } from './site.js'
+  import { VRButton } from './node_modules/three/examples/jsm/webxr/VRButton.js'
+  import {networkScene} from "./scene.js";
+  import {infra} from "./infra.js";
+
+
+  var $rootScope = document;
+  var $location = {};
+  var scene = new networkScene('infra_map', $rootScope, $location, '');
+  document.scene = scene;
+  scene.freeCamera();
+
+  document.scene.renderer.setAnimationLoop(function () {
+    document.scene.renderer.render(document.scene.scene, document.scene.camera)
+
+  })
+
+  document.body.appendChild(VRButton.createButton(document.scene.renderer));
+
+  //loading file
+  /*fetch('./projects/demo.json')
+      .then((response) => response.json())
+      .then((json) => {
+          console.log(json)
+          document.infra  = new infra(json,document.scene);
+          document.infra.init();
+          document.scene.compute();
+      });*/
+
+    //init infras
+    document.scene.addProject('projects/demo.json','Demonstration');
+    document.scene.addProject('projects/kubernetes-simple.json','K8S Simple');
+    document.scene.addProject('projects/kubernetes-complexe.json','K8S Final');
+    //home init
+    document.home = new home({},document.scene);
+    document.scene.registerHome(document.home);
+    document.home.init();
+    document.home.show();
+    //document.home.compute();
+</script>
+
+</body>
+</html>

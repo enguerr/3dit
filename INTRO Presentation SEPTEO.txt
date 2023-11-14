@@ -1,0 +1,25 @@
+INTRO
+- Presentation SEPTEO
+	- 18 baies
+	- 3000 vms
+	- Réseau LEGACY ROUTING / VSPHERE / WINDOWS
+	- Cloud public (Scaleway / OVh / Azure) - environnements hétérogènes
+- Premier montage
+	- RANCHER
+	- TANZU
+- Premières conclusions
+	- Séparation de la solution storage
+		-> Réplication storage
+		-> multi protocole SMB / NFS / ISCSI / RBD / S3
+	- Nouvelles contraintes autour du réseau
+		-> Contrôle de flux - VIP INGRESS
+		-> Contrôle de flux - VIP EGRESS
+		-> Délégation des chaînes de liaison - KIVALA
+		-> Gestion des certificats - KIVALA
+		-> Réseaux dédiés séparés
+	- Automatisation
+		-> Construction d'un module de gestion
+	- Portabilité
+	
+INFRASTRUCTURE CIBLE
+

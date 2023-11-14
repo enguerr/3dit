@@ -1,0 +1,656 @@
+{
+  "sites": [
+    {
+      "name": "EXTERNE",
+      "class": "site",
+      "style": {
+        "childPosition": "horizontal",
+        "minWidth": 10
+      },
+      "zones": [
+        {
+          "name": "INTERNET",
+          "class": "zone",
+          "style": {
+            "childPosition": "horizontal",
+            "minWidth": 5
+          },
+          "networks": [
+            {
+              "name": "INTERNET",
+              "class": "network",
+              "style": {
+                "childPosition": "horizontal",
+                "minWidth": 5
+              },
+              "network": "0.0.0.0/0"
+            }
+          ]
+        },
+        {
+          "name": "UTILISATEURS",
+          "class": "zone",
+          "style": {
+            "childPosition": "horizontal",
+            "minWidth": 5
+          },
+          "networks": [
+            {
+              "name": "LATTES",
+              "class": "network",
+              "style": {
+                "childPosition": "horizontal",
+                "minWidth": 5
+              },
+              "network": "172.19.0.0/16"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "LOGNES",
+      "class": "site",
+      "style": {
+        "childPosition": "vertical",
+        "minWidth": 10
+      },
+      "zones": [
+        {
+          "name": "DMZ-WAN",
+          "class": "zone",
+          "style": {
+            "childPosition": "horizontal",
+            "minWidth": 5
+          },
+          "networks": [
+            {
+              "name": "DMZ-WAN-PROD",
+              "class": "network",
+              "style": {
+                "childPosition": "horizontal",
+                "minWidth": 5
+              },
+              "network": "172.27.216.0/24"
+            },
+            {
+              "name": "DMZ-WAN-PPROD",
+              "class": "network",
+              "network": "172.27.218.0/24"
+            }
+          ]
+        },
+        {
+          "name": "VIP",
+          "class": "zone",
+          "networks": [
+            {
+              "name": "FRONT_VIP_PROD",
+              "class": "network",
+              "network": "172.27.129.0/24"
+            },
+            {
+              "name": "FRONT_VIP_PPROD",
+              "class": "network",
+              "network": "172.27.126.0/24"
+            }
+          ]
+        },
+        {
+          "name": "FRONT",
+          "class": "zone",
+          "networks": [
+            {
+              "name": "FRONT_PROD",
+              "class": "network",
+              "network": "172.27.129.0/24"
+            },
+            {
+              "name": "FRONT_PPROD",
+              "class": "network",
+              "network": "172.27.126.0/24"
+            }
+          ]
+        },
+        {
+          "name": "BACK",
+          "class": "zone",
+          "networks": [
+            {
+              "name": "BACK_PROD",
+              "class": "network",
+              "network": "172.27.131.0/24"
+            },
+            {
+              "name": "BACK_PPROD",
+              "class": "network",
+              "network": "172.27.126.0/24"
+            },
+            {
+              "name": "MIDDLE_PPROD",
+              "class": "network",
+              "network": "172.27.189.0/24"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "instances": [
+    {
+      "name": "LNXKIVRP01",
+      "class": "instance",
+      "interfaces": [
+        {
+          "name": "ens192",
+          "class": "interface",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.18.216.51",
+              "gateway": "172.18.216.1"
+            }
+          ],
+          "net": "DMZ-WAN-PROD"
+        },
+        {
+          "name": "ens384",
+          "class": "interface",
+          "mac": "00:50:56:45:56:59",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.18.216.52",
+              "gateway": "172.18.216.1"
+            }
+          ],
+          "net": "FRONT_VIP_PROD"
+        }
+      ],
+      "cpu": 2,
+      "ram": 4096,
+      "os": "linux",
+      "storage": 60000,
+      "services": [
+        {
+          "name": "HAPROXY",
+          "class": "service"
+        },
+        {
+          "name": "NGINX",
+          "class": "service"
+        }
+      ]
+    },
+    {
+      "name": "LNXKIVRP02",
+      "class": "instance",
+      "interfaces": [
+        {
+          "name": "ens192",
+          "class": "interface",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.18.216.51",
+              "gateway": "172.18.216.1"
+            }
+          ],
+          "net": "DMZ-WAN-PROD"
+        }
+      ],
+      "cpu": 2,
+      "ram": 4096,
+      "os": "linux",
+      "storage": 60000,
+      "services": [
+        {
+          "name": "HAPROXY",
+          "class": "service"
+        },
+        {
+          "name": "NGINX",
+          "class": "service"
+        }
+      ]
+    },
+    {
+      "name": "LNXKIVLB01",
+      "class": "instance",
+      "interfaces": [
+        {
+          "name": "ens192",
+          "class": "interface",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.18.216.51",
+              "gateway": "172.18.216.1"
+            }
+          ],
+          "net": "FRONT_VIP_PROD"
+        }
+      ],
+      "cpu": 2,
+      "ram": 4096,
+      "os": "linux",
+      "storage": 60000,
+      "services": [
+        {
+          "name": "HAPROXY",
+          "class": "service"
+        }
+      ]
+    },
+    {
+      "name": "LNXKIVLB02",
+      "class": "instance",
+      "interfaces": [
+        {
+          "name": "ens192",
+          "class": "interface",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.18.216.51",
+              "gateway": "172.18.216.1"
+            }
+          ],
+          "net": "FRONT_VIP_PROD"
+        }
+      ],
+      "cpu": 2,
+      "ram": 4096,
+      "os": "linux",
+      "storage": 60000,
+      "services": [
+        {
+          "name": "HAPROXY",
+          "class": "service"
+        },
+        {
+          "name": "NGINX",
+          "class": "service"
+        }
+      ]
+    },
+    {
+      "name": "FRONTIIS01",
+      "class": "instance",
+      "interfaces": [
+        {
+          "name": "ens192",
+          "class": "interface",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.18.216.51",
+              "gateway": "172.18.216.1"
+            }
+          ],
+          "net": "FRONT_PROD"
+        }
+      ],
+      "cpu": 2,
+      "ram": 4096,
+      "os": "linux",
+      "storage": 60000,
+      "services": [
+        {
+          "name": "IIS",
+          "class": "service"
+        }
+      ]
+    },
+    {
+      "name": "FRONTIIS02",
+      "class": "instance",
+      "interfaces": [
+        {
+          "name": "ens192",
+          "class": "interface",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.18.216.51",
+              "gateway": "172.18.216.1"
+            }
+          ],
+          "net": "FRONT_PROD"
+        }
+      ],
+      "cpu": 2,
+      "ram": 4096,
+      "os": "linux",
+      "storage": 60000,
+      "services": [
+        {
+          "name": "IIS",
+          "class": "service"
+        }
+      ]
+    },
+    {
+      "name": "FRONTIIS03",
+      "class": "instance",
+      "interfaces": [
+        {
+          "name": "ens192",
+          "class": "interface",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.18.216.51",
+              "gateway": "172.18.216.1"
+            }
+          ],
+          "net": "FRONT_PROD",
+          "site": "LOGNES",
+          "zone": "DMZ-WAN"
+        }
+      ],
+      "cpu": 2,
+      "ram": 4096,
+      "os": "linux",
+      "storage": 60000,
+      "services": [
+        {
+          "name": "IIS",
+          "class": "service"
+        }
+      ]
+    },
+    {
+      "name": "FRONTIIS04",
+      "class": "instance",
+      "interfaces": [
+        {
+          "name": "ens192",
+          "class": "interface",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.18.216.51",
+              "gateway": "172.18.216.1"
+            }
+          ],
+          "net": "FRONT_PPROD"
+        }
+      ],
+      "cpu": 2,
+      "ram": 4096,
+      "os": "linux",
+      "storage": 60000,
+      "services": [
+        {
+          "name": "IIS",
+          "class": "service"
+        }
+      ]
+    },
+    {
+      "name": "BDD01",
+      "class": "instance",
+      "interfaces": [
+        {
+          "name": "ens192",
+          "class": "interface",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.18.216.51",
+              "gateway": "172.18.216.1"
+            }
+          ],
+          "net": "BACK_PROD"
+        }
+      ],
+      "cpu": 2,
+      "ram": 4096,
+      "os": "linux",
+      "storage": 60000,
+      "services": [
+        {
+          "name": "NGINX",
+          "class": "service"
+        }
+      ]
+    },
+    {
+      "name": "BDD02",
+      "class": "instance",
+      "interfaces": [
+        {
+          "name": "ens192",
+          "class": "interface",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.18.216.51",
+              "gateway": "172.18.216.1"
+            }
+          ],
+          "net": "BACK_PROD"
+        }
+      ],
+      "cpu": 2,
+      "ram": 4096,
+      "os": "linux",
+      "storage": 60000,
+      "services": [
+        {
+          "name": "NGINX",
+          "class": "service"
+        }
+      ]
+    },
+    {
+      "name": "BDD03",
+      "class": "instance",
+      "interfaces": [
+        {
+          "name": "ens192",
+          "class": "interface",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.18.216.51",
+              "gateway": "172.18.216.1"
+            }
+          ],
+          "net": "BACK_PPROD"
+        }
+      ],
+      "cpu": 2,
+      "ram": 4096,
+      "os": "linux",
+      "storage": 60000,
+      "services": [
+        {
+          "name": "NGINX",
+          "class": "service"
+        }
+      ]
+    },
+    {
+      "name": "DMZIIS01",
+      "class": "instance",
+      "interfaces": [
+        {
+          "name": "ens192",
+          "class": "interface",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.18.216.51",
+              "gateway": "172.18.216.1"
+            }
+          ],
+          "net": "DMZ-WAN-PPROD"
+        }
+      ],
+      "cpu": 2,
+      "ram": 4096,
+      "os": "linux",
+      "storage": 60000,
+      "services": [
+        {
+          "name": "IIS",
+          "class": "service"
+        }
+      ]
+    },
+    {
+      "name": "DMZIIS02",
+      "class": "instance",
+      "interfaces": [
+        {
+          "name": "ens192",
+          "class": "interface",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.18.216.51",
+              "gateway": "172.18.216.1"
+            }
+          ],
+          "net": "FRONT_VIP_PPROD"
+        }
+      ],
+      "cpu": 2,
+      "ram": 4096,
+      "os": "linux",
+      "storage": 60000,
+      "services": [
+        {
+          "name": "IIS",
+          "class": "service"
+        }
+      ]
+    }
+  ],
+  "networkdevices": [
+    {
+      "name": "FIREWALLL",
+      "class": "firewall",
+      "interfaces": [
+        {
+          "name": "port1",
+          "class": "interface",
+          "position": "front",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "45.85.132.16"
+            },
+            {
+              "class": "ip",
+              "ip": "45.85.132.17"
+            },
+            {
+              "class": "ip",
+              "ip": "45.85.132.18"
+            },
+            {
+              "class": "ip",
+              "ip": "45.85.132.19"
+            }
+          ],
+          "net": "INTERNET"
+        },
+        {
+          "name": "port2",
+          "class": "interface",
+          "position": "back",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.27.218.1"
+            }
+          ],
+          "net": "DMZ-WAN-PPROD"
+        },
+        {
+          "name": "port3",
+          "class": "interface",
+          "position": "back",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.27.216.1"
+            }
+          ],
+          "net": "DMZ-WAN-PROD"
+        },
+        {
+          "name": "port4",
+          "class": "interface",
+          "position": "back",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.27.129.1"
+            }
+          ],
+          "net": "FRONT_VIP_PPROD"
+        },
+        {
+          "name": "port5",
+          "class": "interface",
+          "position": "back",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.27.129.1"
+            }
+          ],
+          "net": "FRONT_VIP_PROD"
+        },
+        {
+          "name": "port6",
+          "class": "interface",
+          "position": "front",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.19.0.1"
+            }
+          ],
+          "net": "LATTES"
+        },
+        {
+          "name": "port7",
+          "class": "interface",
+          "position": "front",
+          "mac": "00:50:56:45:56:58",
+          "ips": [
+            {
+              "class": "ip",
+              "ip": "172.19.1.1"
+            }
+          ],
+          "net": "LATTES"
+        }
+      ]
+    }
+  ]
+}
