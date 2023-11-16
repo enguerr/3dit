@@ -39,6 +39,7 @@ class defaultitem {
         this.children = [];
         this.parents = [parent];
         this.connectors = [];
+        this.mainmaterial = null;
         this.tweens = [];
         this.colors = [];
         this.key = this.generateHexString(10);
@@ -110,7 +111,7 @@ class defaultitem {
         //geometry.translate(0,5,0);
         //var material = new THREE.MeshLambertMaterial( {color: this.colors[0],opacity: 1} );
         /**Test material classic**/
-        var material = new THREE.MeshPhongMaterial( {
+        this.mainmaterial = new THREE.MeshPhongMaterial( {
             color: 0x9194ce,
             shininess: 100,
             reflectivity: 1,
@@ -123,7 +124,7 @@ class defaultitem {
         });
 
         this.mainobj = new THREE.Group();
-        this.squareobj = new THREE.Mesh(this.square, material);
+        this.squareobj = new THREE.Mesh(this.square, this.mainmaterial);
         this.mainobj.add(this.squareobj);
 
         this.mainobj.item = this;
@@ -525,7 +526,7 @@ class defaultitem {
      */
     hightlight() {
         if (this.squareobj)
-            new TWEEN.Tween(this.squareobj.material)
+            new TWEEN.Tween(this.mainmaterial)
                 .to(
                     {
                         emissiveIntensity: 10,

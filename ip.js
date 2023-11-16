@@ -49,8 +49,7 @@ class ip extends defaultitem {
                 net.add(ipo);
                 //ipo.addParent(net);
                 //ip connector
-                console.log(this.consoleprefix+' create ',this);
-                var conn = new connector(this,ipo,{direction:el.vips[i].style.direction,color:el.vips[i].style.color,visible:this.config.style.visible,decal:this.config.style.decal+(i*0.2)});
+                var conn = new connector(this,ipo,{direction:'direct',color:el.vips[i].style.color,visible:this.config.style.visible,decal:this.config.style.decal+(i*0.2)});
                 this.add(conn);
                 ipo.add(conn);
             }

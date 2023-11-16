@@ -149,6 +149,7 @@ class instance extends defaultitem {
         var cube = new THREE.Mesh(geometry, material);
 
         cube.item = this;
+        this.mainmaterial = material;
         this.mainobj = new THREE.Group();
         this.mainobj.add(cube);
         //hauteur
@@ -173,6 +174,10 @@ class instance extends defaultitem {
 
         //children
         this.create(this.config);
+
+        this.mainobj.item = this;
+        this.scn.addObjInteract(this.mainobj);
+
 
     }
     /**

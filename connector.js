@@ -105,6 +105,8 @@ class connector {
                     //devant de 0.5
                     new THREE.Vector3( posfrom.x, posfrom.y, posfrom.z-(0.5+this.style.decal) ),
                     //on va au dessus
+                    new THREE.Vector3( posfrom.x, posto.y+0.5+this.style.decal, posfrom.z-(0.5+this.style.decal) ),
+                    //on va au dessus
                     new THREE.Vector3( posto.x, posto.y+0.5+this.style.decal, posto.z ),
                     //impact
                     new THREE.Vector3( posto.x, posto.y, posto.z ),

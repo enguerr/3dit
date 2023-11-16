@@ -28,21 +28,25 @@ class networkinterface extends defaultitem {
         if (el.ips) {
             //find parent network
             var net = this.getInfra().find('network', el.net);
-            if (net)for (var i = 0; i < el.ips.length; i++) {
-                if (el.ips[i].net){
-                    net = this.getInfra().find('network',el.ips[i].net);
+            var ips = el.ips;
+            for (i = 0; i < el.ips.length; i++) {
+                ips[i] = el.ips[i];
+            }
+            if (net)for (var i = 0; i < ips.length; i++) {
+                if (ips[i].net){
+                    net = this.getInfra().find('network',ips[i].net);
                 }
                 //ip object
-                if (!el.ips[i].style) el.ips[i].style = {};
-                if (!el.ips[i].style.color) el.ips[i].style.color = this.config.style.color;
-                var ipo = new ip(this.scn, el.ips[i],this);
+                if (!ips[i].style) ips[i].style = {};
+                if (!ips[i].style.color) ips[i].style.color = this.config.style.color;
+                var ipo = new ip(this.scn, ips[i],this);
                 this.add(ipo);
                 net.add(ipo);
-                ipo.addParent(net);
                 //ip connector
                 var conn = new connector(this,ipo,{direction:this.direction,color:this.config.style.color,visible:this.config.style.visible,decal:this.config.style.decal+(i*0.2)});
                 this.add(conn);
                 ipo.add(conn);
+                console.log('createips',this);
             } else console.error('cant find network ',el.net);
         }
     }
@@ -52,7 +56,7 @@ class networkinterface extends defaultitem {
      * @param mi
      */
     add (mi,index='') {
-        mi.createObject();
+        //mi.createObject();
         switch (mi.typeObj) {
             case 'connector':
                 this.connectors[index]=mi;

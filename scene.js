@@ -6,6 +6,7 @@ import {BoxLineGeometry} from "./node_modules/three/examples/jsm/geometries/BoxL
 import * as ThreeMeshUI from "three-mesh-ui";
 import {infra} from "./infra.js";
 import {positionhome} from "./positionhome.js";
+
 function networkScene(mainDiv,$rootScope,$location,url) {
     //PROPS
     this.scene = null;
@@ -315,6 +316,7 @@ function networkScene(mainDiv,$rootScope,$location,url) {
      * addObjInteract
      */
     this.addObjInteract = function (obj) {
+        console.log('add obj interact',obj);
         this.objInteracts.push(obj);
     };
     /**
@@ -341,6 +343,8 @@ function networkScene(mainDiv,$rootScope,$location,url) {
             } else {
                 // Component.setState internally call component.set with the options you defined in component.setupState
                 intersect.object.setState( 'hovered' );
+                if (intersect.object.item)
+                    intersect.object.item.highlight();
             }
         }
 
@@ -491,69 +495,6 @@ function networkScene(mainDiv,$rootScope,$location,url) {
     /***************************
      * EVENTS
      */
-    /**
-     * enableClick
-     * Enable click events on a particular context given with parameters
-     * @param object item context to enable click
-     */
-    this.enableClick = function (item) {
-        if (this.piControls){
-            //destruction de l'existant
-            this.piControls.removeEventListener('hoveron');
-            this.piControls.removeEventListener('hoveroff');
-            this.piControls.removeEventListener('objFocus');
-            this.piControls.dispose();
-            this.piControls = null;
-        }
-        var cam = this.sProperties.cameras[0];
-        var rend = this.sProperties.renderers[0];
-        var scn = this.scene;
-        if (!item) item = scn;
-        var meshes = this.getAllMeshes(item.children,[]);
-        console.log('3D >> scene >> enable click ',meshes);
-        this.piControls = new THREE.ParcInfraControls(meshes, cam, rend.domElement);
-        scn.uProps.controls.push(this.piControls);
-        this.piControls.activate();
-        this.piControls.addEventListener('hoveron', function (event) {
-            console.log('3D >> scene >> hover >> item ',event);
-            var hoveredItem = obj.getItemFromMesh(event.object.uuid, scn);
-            //console.log(hoveredItem,event);
-            /*var hoverTitle = document.getElementById('hoverTitle');
-            if (!hoverTitle) {
-                hoverTitle = document.createElement('div');
-                hoverTitle.id = 'hoverTitle';
-                document.body.appendChild(hoverTitle);
-            }
-            hoverTitle.innerHTML = (hoveredItem.label || 'Inconnu');
-            if (hoveredItem.id)
-                hoverTitle.innerHTML += " (" + hoveredItem.id + ") ";
-
-            hoverTitle.setAttribute("style",
-                'position: absolute;' +
-                'top:' + (event.oEvent.y + 15) + 'px;' +
-                'left:' + (event.oEvent.x + 15) + 'px;' +
-                'z-index: 3000;' +
-                'background-color: #fff;' +
-                'border: 1px solid #000;' +
-                'padding: 5px;');*/
-        });
-        this.piControls.addEventListener('hoveroff', function (event) {
-            /*var hoverTitle = document.getElementById('hoverTitle');
-            if (hoverTitle) {
-                hoverTitle.outerHTML = "";
-            }*/
-        });
-        this.piControls.addEventListener('objFocus', function (event) {
-            console.log('3D >> scene >> focusObject',event.object.item);
-            var clickedItem = event.object.item;
-            if(!clickedItem){
-                console.log('3D >> scene >> focusObject >> no item to select',event);
-                return;
-            }
-            $rootScope.$broadcast('objFocus',clickedItem);
-        });
-    };
-
     /**
      * add
      * Ajout un objet sur la scene
