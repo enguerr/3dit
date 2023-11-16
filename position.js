@@ -29,7 +29,7 @@ class position  {
         }
         this.list = list;
         this.marge = marge;
-        this.maxcol = maxcol;
+        this.maxcol = this.style.maxcol?this.style.maxcol:maxcol;
         this.maxwidth = maxwidth;
         this.maxdepth = maxdepth;
         //console.log(this.consoleprefix+'new ');
@@ -63,38 +63,49 @@ class position  {
 
                     //on positionnne les éléments vertcialement
                     for (var s in this.list) {
-                        this.list[s].move({x: this.list[s].z, z: startz, y: this.list[s].y});
                         let curwidth = this.list[s].getWidth();
+                        let mainlargeur = this.base.getInnerWidth();
                         lartot = (lartot>curwidth)?lartot:curwidth;
+                        this.list[s].move({x: (mainlargeur-curwidth)/2, z: startz, y: this.list[s].y});
                         startz += this.list[s].getDepth() + margedepth;
                     }
 
-                    //on applique la même largeur à tous les enfaats
+                    //on applique la même largeur à tous les enfaats et on centre
                     for (var s in this.list) {
                         if (this.list[s].style.minWidth != lartot) {
                             this.list[s].style.minWidth = lartot;
-                            this.list[s].compute();
+                            //this.list[s].compute();
                         }
                     }
                     break;
                 default:
                 case 'horizontal':
                     //calculs largeurs
+                    var nb = 0;
                     for (var s in this.list) {
                         //largeur
                         var lar = this.list[s].getWidth();
                         //console.log(this.consoleprefix + 'move >> scene >> subnet '+s+' getWidth '+lar+" type: horizontal posx: "+startx+" marge: "+marge+" largeur totale: "+lartot,this.list[s]);
-                        if (lar > 0 && lar !== Infinity) {
+                        if (lar > 0 && lar !== Infinity&&lartot<this.maxwidth&&nb<this.maxcol-1) {
                             lartot += lar;
                         }
+                        nb++;
                     }
+                    var maxnb = (this.maxcol-1>nb)?nb:this.maxcol;
                     //marge
-                    lartot += (nb - 1) * margewidth;
+                    lartot += (maxnb - 1) * margewidth;
 
                     //on positionnne les éléments
+                    var it = 0;
                     for (var s in this.list) {
-                        this.list[s].move({x: startx, z: this.list[s].z, y: this.list[s].y});
+                        if (it > this.maxcol-1){
+                            it = 0;
+                            startx = 0;
+                            startz += this.list[s].getDepth() + margedepth;
+                        }
+                        this.list[s].move({x: startx, z: startz, y: this.list[s].y});
                         startx += this.list[s].getWidth() + margewidth;
+                        it++;
                     }
                     break;
                 case 'fill':

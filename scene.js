@@ -10,8 +10,8 @@ function networkScene(mainDiv,$rootScope,$location,url) {
     //PROPS
     this.scene = null;
     this.scnList = [];
-    this.camOrigPosition = {x: 0, y: 10, z: 20};
-    this.camOrigTarget = {x: 0, y: 10, z: 0};
+    this.camOrigPosition = new THREE.Vector3( 0, 10, 20);
+    this.camOrigTarget = new THREE.Vector3(0, 0, 0);
     this.sProperties = {
         containers: [],
         cameras: [],
@@ -78,7 +78,7 @@ function networkScene(mainDiv,$rootScope,$location,url) {
         //initilisation camera
         this.camera = new THREE.PerspectiveCamera(45, this.parentDiv.offsetWidth / this.parentDiv.offsetHeight, 1, 1000);
         this.camera.tweens = [];
-        this.camera.target = this.camOrigTarget;
+        this.camera.lookAt(this.camOrigTarget);
 
         this.sProperties.cameras.push(this.camera);
 
@@ -169,7 +169,7 @@ function networkScene(mainDiv,$rootScope,$location,url) {
         ground.receiveShadow = true;
         this.scene.add( ground );
         var room = new THREE.LineSegments(
-            new BoxLineGeometry( 80, 60, 100, 100, 100, 100 ).translate( 0, 30, -20 ),
+            new BoxLineGeometry( 80, 60, 200, 100, 100, 100 ).translate( 0, 30, -40 ),
             new THREE.LineBasicMaterial( { color: 0x343434 } )
         );
         this.scene.add(room);
@@ -209,33 +209,28 @@ function networkScene(mainDiv,$rootScope,$location,url) {
     this.initGuiDebug = function(ambient,dirLight,spotLight) {
         //initialisation interface
         this.gui = new dat.GUI({name: 'DEBUG LIGHTS'});
-        var folder1 = this.gui.addFolder('Global light');
-        var folder2 = this.gui.addFolder('Directional light');
-        var folder3 = this.gui.addFolder('Spot light');
-        //ambiant
-        folder1.add(ambient, 'intensity', 0, 1);
-        //directional
-        folder2.add(dirLight, 'intensity', 0, 1);
-        //spot
-        folder3.add(spotLight, 'intensity', 0, 10);
-        folder3.add(spotLight, 'distance', 0, 100);
-        folder3.add(spotLight, 'angle', -1, 1);
-        folder3.add(spotLight, 'penumbra', 0, 1);
-        folder3.add(spotLight, 'decay', 0, 10);
-        folder3.add(spotLight.target.position, 'x', -20, 20);
-        folder3.add(spotLight.target.position, 'y', -20, 20);
-        folder3.add(spotLight.target.position, 'z', -100, 20);
-        folder3.add(spotLight.position, 'x', -20, 20);
-        folder3.add(spotLight.position, 'y', -20, 20);
-        folder3.add(spotLight.position, 'z', -100, 100);
-        //var folder4 = this.gui.addFolder('Actions');
+        var folder1 = this.gui.addFolder('Camera Position');
+        folder1.add(this.camera.position,'x',-100,+100);
+        folder1.add(this.camera.position,'y',-100,+100);
+        folder1.add(this.camera.position,'z',-100,+100);
+        /*var folder2 = this.gui.addFolder('Camera Target');
+        folder2.add(this.camera.target,'x',-100,+100);
+        folder2.add(this.camera.target,'y',-100,+100);
+        folder2.add(this.camera.target,'z',-100,+100);*/
         var scnobj = this;
         this.gui.add({ Compute:function (){scnobj.compute()}},'Compute');
         this.gui.add({ DebugSite:function (){document.infra.enableDebug('site')}},'DebugSite');
         this.gui.add({ DebugScene:function (){scnobj.enableDebug()}},'DebugScene');
-        this.gui.add({ ComputePosition:function (){scnobj.position.compute()}},'ComputePosition');
-
+        this.gui.add({ getPoint:function (){scnobj.getPoint()}},'getPoint');
+        this.gui.add({ lookAtTarget:function (){scnobj.camera.lookAt(scnobj.camOrigTarget)}},'lookAtTarget');
+        this.gui.add({ freeCamera:function (){scnobj.freeCamera()}},'freeCamera');
+        this.gui.add({ goHome:function (){scnobj.goHome()}},'goHome');
     };
+
+    this.getPoint = function () {
+        navigator.clipboard.writeText(JSON.stringify({camera: this.camera.position,target: this.camera.getWorldDirection(new THREE.Vector3(0,0,5)).multiplyScalar(10).add(this.camera.position)}));
+        console.log('POI point',JSON.stringify({camera: this.camera.position,target: this.camera.getWorldDirection(new THREE.Vector3(0,0,5)).multiplyScalar(10).add(this.camera.position)}));
+    }
 
     this.render = function (scnList) {
         //on lance un compute toutes les 60 frames
@@ -266,6 +261,7 @@ function networkScene(mainDiv,$rootScope,$location,url) {
     this.destroyCurrentProject = function (){
         this.children.pop();
         this.currentproject.destroy();
+        this.currentproject = null;
         this.resetConnectors();
     }
     this.registerProject = function (p){
@@ -275,11 +271,18 @@ function networkScene(mainDiv,$rootScope,$location,url) {
     this.registerHome = function (home){
       this.home= home;
     };
-    this.goHome = function (obj,title) {
+    this.goHome = function () {
         if (this.currentproject){
             this.destroyCurrentProject();
         }
         this.home.show();
+        this.animateCamera(this.home.cameraPosition,this.home.cameraTarget);
+    };
+    this.goProject = function () {
+        this.go(this.currentproject.getFirstPoi());
+    };
+    this.go = function (poi) {
+        this.animateCamera(poi.camera,poi.target,3000);
     };
     this.addProject = function (obj,title) {
         this.projects[title] = obj;
@@ -298,9 +301,10 @@ function networkScene(mainDiv,$rootScope,$location,url) {
             .then((json) => {
                 console.log(json);
                 let inf  = new infra(json,document.scene);
-                inf.init();
                 document.scene.registerProject(inf);
+                inf.init();
                 document.scene.compute();
+                document.scene.goProject();
             });
     };
 
@@ -380,13 +384,14 @@ function networkScene(mainDiv,$rootScope,$location,url) {
         //spot animation
         //obj.spotAnimation(time);
         //this.renderer.setAnimationLoop(obj.animate);
-        TWEEN.update();
         if (obj.controls) {obj.controls.update();}
         obj.render(obj.scnList);
         //animate children
         if (obj.children)
             for (var i in obj.children)
                 obj.children[i].animate();
+        //TWEEN update
+        TWEEN.update();
         //animate interface ui
         ThreeMeshUI.update();
         //update buttons by rautracing
@@ -510,7 +515,7 @@ function networkScene(mainDiv,$rootScope,$location,url) {
         scn.uProps.controls.push(this.piControls);
         this.piControls.activate();
         this.piControls.addEventListener('hoveron', function (event) {
-            //console.log('3D >> scene >> hover >> item ',event);
+            console.log('3D >> scene >> hover >> item ',event);
             var hoveredItem = obj.getItemFromMesh(event.object.uuid, scn);
             //console.log(hoveredItem,event);
             /*var hoverTitle = document.getElementById('hoverTitle');
@@ -669,22 +674,25 @@ function networkScene(mainDiv,$rootScope,$location,url) {
      * @param cam
      * @returns {boolean}
      */
-    this.animateCamera = function (pos,target) {
+    this.animateCamera = function (pos,target,duration=700) {
         var cam= this.camera;
-        console.log('3D >> scene >> animateCamera',pos,target,'from',cam.position,cam.target);
+        var tar = this.camOrigTarget ;
+        console.log('3D >> scene >> animateCamera',pos,target,'from',cam.position,tar);
         var camTween = new TWEEN.Tween(cam.position).to({
             x: pos.x,
             y: pos.y,
             z: pos.z
-        }, 700).onUpdate(function () {
-            cam.lookAt(cam.target.x,cam.target.y,cam.target.z);
+        }, duration).onUpdate(function () {
+            //console.log('camera',tar);
+            cam.lookAt(tar);
         });
-        var camTweenBis = new TWEEN.Tween(cam.target).to({
+        var camTweenBis = new TWEEN.Tween(tar).to({
             x: target.x,
             y: target.y,
             z: target.z
-        }, 700).onUpdate(function () {
-            cam.lookAt(cam.target.x,cam.target.y,cam.target.z);
+        }, duration).onUpdate(function () {
+            //console.log('target',tar);
+            cam.lookAt(tar);
         });
         camTweenBis.start();
         camTween.start();

@@ -51,11 +51,11 @@ class defaultitem {
         else {
             //update style
             for (var i in this.config.style){
-                this.style[i] = this.config.style[i];
+               this.style[i] = this.config.style[i];
             }
             this.config.style = this.style;
         }
-        this.position = new position(this,this.children,2,this.config.style,4,5,5);
+        this.position = new position(this,this.children,2,this.config.style,2,10,10);
         this.container = new THREE.Group();
         this.square =null;
         this.squareobj =null;
@@ -68,6 +68,9 @@ class defaultitem {
         this.heightpadding = 1;
         this.depthpadding = 1;
         this.innermargin = 1;
+
+        this.pois = config.pois;
+        this.currentPoi = 0;
 
         //override style
         if (config.style) this.style = { ...this.style, ...config.style};
@@ -246,22 +249,6 @@ class defaultitem {
     }
 
     /**
-     * show
-     * Affiche l'objet
-     */
-    show(){
-        this.mainobj.visible = true;
-    }
-
-    /**
-     * hide
-     * Cache l'objet
-     */
-    hide (){
-        this.mainobj.visible = false;
-    }
-
-    /**
      * move
      * Deplacemenent de l'objet
      */
@@ -269,6 +256,37 @@ class defaultitem {
         if (!isNaN(coords['x']) && coords['x'] !== Infinity) this.mainobj.position.x= coords['x'];
         if (!isNaN(coords['y']) && coords['y'] !== Infinity) this.mainobj.position.y= coords['y'];
         if (!isNaN(coords['z']) && coords['z'] !== Infinity) this.mainobj.position.z= coords['z'];
+    }
+    /*************************
+     * NAV
+     */
+    /**
+     * getNextPoi
+     * @returns {*}
+     */
+    getNextPoi() {
+        this.currentPoi++;
+        if (this.currentPoi >= this.pois.length)
+            this.currentPoi = 0;
+        return this.pois[this.currentPoi];
+    }
+    /**
+     * getPreviousPoi
+     * @returns {*}
+     */
+    getPreviousPoi() {
+        this.currentPoi--;
+        if (this.currentPoi < 0)
+            this.currentPoi = this.pois.length-1;
+        return this.pois[this.currentPoi];
+    }
+    /**
+     * getFirstPoi
+     * @returns {*}
+     */
+    getFirstPoi() {
+        this.currentPoi=0;
+        return this.pois[this.currentPoi];
     }
     /*************************
      * UTILS
@@ -503,6 +521,22 @@ class defaultitem {
             .start()
     }
     /**
+     * highlight
+     */
+    hightlight() {
+        if (this.squareobj)
+            new TWEEN.Tween(this.squareobj.material)
+                .to(
+                    {
+                        emissiveIntensity: 10,
+                        shininess: 1000
+                    },
+                    2000
+                )
+                .easing(TWEEN.Easing.Cubic.Out)
+                .start()
+    }
+    /**
      * enableDebug
      * Enable debug and display bouding box
      */
@@ -526,7 +560,7 @@ class defaultitem {
     /**
      * createText
      */
-    createText(x,y,z,message,obj,textsize=0.3,textcolor=0x666666,textrotate='top'){
+    createText(x,y,z,message,obj,textsize=0.3,textcolor=0xf2f2f2,textrotate='top'){
         const loader = new FontLoader();
         return loader.load( 'fonts/helvetiker_regular.typeface.json', function ( font ) {
             const color = new THREE.Color(textcolor);

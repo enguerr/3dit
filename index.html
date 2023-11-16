@@ -11,12 +11,6 @@
             height: 100%
         }
     </style>
-    <!-- Angular Version Scripts -->
-    <script src="https://infra-pprod.septeo.fr/Skins/AngularAdmin/assets/vendors/angular/angular.min.js"></script>
-    <script src="https://infra-pprod.septeo.fr/Skins/AngularAdmin/assets/vendors/angular-route/angular-route.min.js"></script>
-    <script src="https://infra-pprod.septeo.fr/Skins/AngularAdmin/assets/vendors/angular-sanitize/angular-sanitize.min.js"></script>
-    <script src="https://infra-pprod.septeo.fr/Skins/AngularAdmin/assets/vendors/angular-nl2br/angular-nl2br.js"></script>
-
     <!--<script src="lib/controls/ParcInfraControls.js"></script>-->
     <script src="lib/libs/tween.min.js"></script>
 </head>
@@ -43,7 +37,7 @@
   var $location = {};
   var scene = new networkScene('infra_map', $rootScope, $location, '');
   document.scene = scene;
-  scene.freeCamera();
+  //scene.freeCamera();
 
   document.scene.renderer.setAnimationLoop(function () {
     document.scene.renderer.render(document.scene.scene, document.scene.camera)
@@ -52,26 +46,16 @@
 
   document.body.appendChild(VRButton.createButton(document.scene.renderer));
 
-  //loading file
-  /*fetch('./projects/demo.json')
-      .then((response) => response.json())
-      .then((json) => {
-          console.log(json)
-          document.infra  = new infra(json,document.scene);
-          document.infra.init();
-          document.scene.compute();
-      });*/
-
-    //init infras
-    document.scene.addProject('projects/demo.json','Demonstration');
-    document.scene.addProject('projects/kubernetes-simple.json','K8S Simple');
-    document.scene.addProject('projects/kubernetes-complexe.json','K8S Final');
-    //home init
-    document.home = new home({},document.scene);
-    document.scene.registerHome(document.home);
-    document.home.init();
-    document.home.show();
-    //document.home.compute();
+  //init infras
+  document.scene.addProject('projects/demo.json','Demonstration');
+  document.scene.addProject('projects/kubernetes-simple.json','K8S Simple');
+  document.scene.addProject('projects/kubernetes-complexe.json','K8S Final');
+  //home init
+  document.home = new home({},document.scene);
+  document.scene.registerHome(document.home);
+  document.home.init();
+  document.scene.goHome();
+  //document.home.compute();
 </script>
 
 </body>

@@ -10,6 +10,9 @@ class networkinterface extends defaultitem {
         if (!config.style) config.style = {};
         if (!config.style.color)
             config.style.color = 0x1155ff;
+        if (!config.style.visible)
+            config.style.visible = true;
+        else config.style.visible = false;
         super(scn,config,parent);
         this.ips = [];
         this.direction = direction;
@@ -26,6 +29,9 @@ class networkinterface extends defaultitem {
             //find parent network
             var net = this.getInfra().find('network', el.net);
             if (net)for (var i = 0; i < el.ips.length; i++) {
+                if (el.ips[i].net){
+                    net = this.getInfra().find('network',el.ips[i].net);
+                }
                 //ip object
                 if (!el.ips[i].style) el.ips[i].style = {};
                 if (!el.ips[i].style.color) el.ips[i].style.color = this.config.style.color;
@@ -34,7 +40,7 @@ class networkinterface extends defaultitem {
                 net.add(ipo);
                 ipo.addParent(net);
                 //ip connector
-                var conn = new connector(this,ipo,{direction:this.direction,color:this.config.style.color,decal:this.config.style.decal+(i*0.2)});
+                var conn = new connector(this,ipo,{direction:this.direction,color:this.config.style.color,visible:this.config.style.visible,decal:this.config.style.decal+(i*0.2)});
                 this.add(conn);
                 ipo.add(conn);
             } else console.error('cant find network ',el.net);
@@ -87,6 +93,7 @@ class networkinterface extends defaultitem {
         cube.item = this;
         this.mainobj = new THREE.Group();
         this.mainobj.add(cube);
+        this.mainobj.visible = this.config.style.visible;
 
         this.configObject();
 

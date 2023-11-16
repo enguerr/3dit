@@ -4,9 +4,28 @@
 import * as THREE from 'three';
 import { defaultitem } from './defaultitem.js';
 class network extends defaultitem {
+    style = {
+        minWidth:10,
+        minDepth:6,
+        decal:0,
+        direction: 'front',
+        minHeight:0,
+        maxWidth:10,
+        maxDepth:1000,
+        maxHeight:1000,
+        widthmargin: 1,
+        heightmargin: 1,
+        depthmargin: 1,
+        widthpadding: 1,
+        heightpadding: 1,
+        depthpadding: 1,
+        innermargin: 1,
+        childPosition:'horizontal'              //horizontal,vertical,fill
+    };
     constructor(scn,config,parent) {
-        super(scn,config,parent);
+        //STYLE
         //SPECS
+        super(scn,config,parent);
         this.cylinderobj = null;
         this.cylinder = null;
         this.square = null;
@@ -19,6 +38,7 @@ class network extends defaultitem {
         this.innermargin = 1;                  //marge autour des serveurs
         this.cylinderoffset = 0.5;          //décalage en arrière du cylindre réseau
         this.squareoffset = 0.2;            //hauteur des serveurs
+
 
         //console.log('3D >> '+this.typeObj+' >> new ');
     }

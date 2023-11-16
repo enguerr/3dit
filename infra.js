@@ -34,6 +34,8 @@ class infra extends defaultitem{
         this.positionNetworkDevices = new positionnetworkdevice(this,this.networkdevices);
         this.container = new THREE.Group();
         this.mainobj = null;
+        this.cameraPosition = new THREE.Vector3(-22.9,27.3,-134.4);
+        this.cameraTarget = new THREE.Vector3(-18.12,21.9,-127.6);
         //console.log('3D >> '+this.typeObj+' >> new ');
 
     }
@@ -61,7 +63,6 @@ class infra extends defaultitem{
         for (var i = 0;i < this.config.instances.length;i++) {
             this.create(this.config.instances[i], this);
         }
-
     }
 
     /**
@@ -80,12 +81,15 @@ class infra extends defaultitem{
         container.position.set( 0, -2, -9 );
         container.scale.set( 0.2, 0.2, 0.2 );
         container.rotation.x = -0.3;
+        let infra = this;
         let scn = this.scn;
         let buttonNext = this.createButton('Suivant',function() {
             console.log('infra >> nav Suivant');
+            scn.go(infra.getNextPoi());
         });
         let buttonPrevious = this.createButton('Precedent',function() {
             console.log('infra >> nav Précédent');
+            scn.go(infra.getPreviousPoi());
         });
         let buttonHome = this.createButton('Accueil',function() {
             console.log('infra >> nav Accueil');

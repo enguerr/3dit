@@ -10,6 +10,7 @@ import { service } from './service.js';
 class instance extends defaultitem {
     constructor(scn,config,parent) {
         super(scn,config,parent);
+        this.theme = (config.theme)?config.theme: 'virtual';
         this.typeObj = 'instance';
         this.infra = parent;
         this.interfaces = [];
@@ -52,7 +53,7 @@ class instance extends defaultitem {
             innermargin: 1,
             childPosition:'fill'              //horizontal,vertical,fill
         },1,1,5);
-        //console.log('3D >> '+this.typeObj+' >> new ');
+        console.log('3D >> '+this.typeObj+' >> new ',config);
     }
     /**
      * create
@@ -63,8 +64,9 @@ class instance extends defaultitem {
             for (var i = 0; i < el.interfaces.length; i++) {
                 if (!el.interfaces[i].style)el.interfaces[i].style={};
                 if (!el.interfaces[i].style.color)el.interfaces[i].style.color = this.style.color;
-                if (!el.interfaces[i].style.decal)el.interfaces[i].style.decal = i*0.2;
-                var nif = new networkinterface(this.scn, el.interfaces[i],this,(i%2==0)?'front':'back');
+                if (!el.interfaces[i].style.decal)el.interfaces[i].style.decal = i*0.4;
+                if (!i)el.interfaces[i].style.visible = false;
+                var nif = new networkinterface(this.scn, el.interfaces[i],this,((el.interfaces[i].position)?el.interfaces[i].position:(i%2==1)?'front':'back'));
                 this.add(nif);
             }
         }
@@ -86,7 +88,7 @@ class instance extends defaultitem {
             case 'networkinterface':
                 this.interfaces.push(mi);
                 //register connector
-                if (mi.direction=='front')
+                if (mi.direction=='front'||mi.direction=='direct')
                     this.interfacesFrontContainer.add(mi.mainobj);
                 else
                     this.interfacesBackContainer.add(mi.mainobj);
@@ -110,23 +112,39 @@ class instance extends defaultitem {
      * Creatio nde l'objet 3d et affecttation des modeles et textures
      */
     createObject(){
+        //var geometry = new THREE.SphereBufferGeometry( 3.14, 64, 16 );
         let width = 2;
         var geometry = new THREE.BoxGeometry( width, width, width );
         geometry.translate(width/2,width/2,width/2);
-        //var geometry = new THREE.SphereBufferGeometry( 3.14, 64, 16 );
-
-        /**Test material classic**/
-        var material = new THREE.MeshPhongMaterial( {
-            color: 0x2194ce,
-            shininess: 100,
-            reflectivity: 1,
-            refractionRatio: 0.2,
-            emissive: 0x2194ce,
-            emissiveIntensity: 0.8,
-            specular: 0xf4f4f4,
-            opacity: 0.85,
-            transparent: true
-        });
+        switch (this.theme){
+            case "physical":
+                var material = new THREE.MeshPhongMaterial( {
+                    color: 0x2194ce,
+                    shininess: 1000,
+                    reflectivity: 1,
+                    refractionRatio: 0.2,
+                    emissive: 0x2194ce,
+                    emissiveIntensity: 10,
+                    specular: 0xf4f4f4,
+                    opacity: 0.85,
+                    transparent: true
+                });
+                break;
+            case "virtual":
+            default:
+                var material = new THREE.MeshPhongMaterial( {
+                    color: 0x2194ce,
+                    shininess: 100,
+                    reflectivity: 1,
+                    refractionRatio: 0.2,
+                    emissive: 0x2194ce,
+                    emissiveIntensity: 0.8,
+                    specular: 0xf4f4f4,
+                    opacity: 0.85,
+                    transparent: true
+                });
+                break;
+        }
 
         var cube = new THREE.Mesh(geometry, material);
 
@@ -155,6 +173,7 @@ class instance extends defaultitem {
 
         //children
         this.create(this.config);
+
     }
     /**
      * compute

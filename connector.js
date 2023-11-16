@@ -19,7 +19,7 @@ class connector {
         this.parent = from.scn;
         this.typeObj = 'connector';
         //console.log('3D >> '+this.typeObj+' >> new >> from ',this.from,' to ',this.to);
-        this.consoleprefix = '       +connector ';
+        this.consoleprefix = '       +connector '+this.style.direction+' ';
         console.log(this.consoleprefix+' create element',this);
     }
 
@@ -59,6 +59,28 @@ class connector {
         var depth = this.to.getDepth();
         // Create a sine-like wave
         switch (this.style.direction){
+            case 'side':
+                //recherche de la zone référente
+                var largeur = this.parent.currentproject.getWidth();
+                var curve = new THREE.CatmullRomCurve3( [
+                    //start
+                    new THREE.Vector3( posfrom.x, posfrom.y, posfrom.z ),
+                    //devant de 0.5
+                    new THREE.Vector3( posfrom.x, posfrom.y, posfrom.z+0.5+this.style.decal ),
+                    //on descend
+                    new THREE.Vector3( posfrom.x, posto.y+0.5+this.style.decal, posfrom.z+0.5+this.style.decal ),
+                    //on decale sur le X zero
+                    new THREE.Vector3( -(largeur/2)-this.style.decal, posto.y+0.5+this.style.decal, posfrom.z+0.5+this.style.decal ),
+                    //on decale sur le côté
+                    new THREE.Vector3( -(largeur/2)-this.style.decal, posto.y+0.5+this.style.decal, posto.z+this.style.decal ),
+                    //on revient dans l'axe
+                    new THREE.Vector3( posto.x, posto.y+0.5+this.style.decal, posto.z+this.style.decal ),
+                    //on reemonte
+                    new THREE.Vector3( posto.x, posto.y+0.5+this.style.decal, posto.z ),
+                    //impact
+                    new THREE.Vector3( posto.x, posto.y, posto.z ),
+                ] ,false,'catmullrom',0.01);
+                break;
             case 'back':
                 var curve = new THREE.CatmullRomCurve3( [
                     //start
@@ -76,6 +98,18 @@ class connector {
                 ] ,false,'catmullrom',0.01);
                 break;
             default:
+            case 'direct':
+                var curve = new THREE.CatmullRomCurve3( [
+                    //start
+                    new THREE.Vector3( posfrom.x, posfrom.y, posfrom.z ),
+                    //devant de 0.5
+                    new THREE.Vector3( posfrom.x, posfrom.y, posfrom.z-(0.5+this.style.decal) ),
+                    //on va au dessus
+                    new THREE.Vector3( posto.x, posto.y+0.5+this.style.decal, posto.z ),
+                    //impact
+                    new THREE.Vector3( posto.x, posto.y, posto.z ),
+                ] ,false,'catmullrom',0.01);
+                break;
             case 'front':
                 var curve = new THREE.CatmullRomCurve3( [
                     //start

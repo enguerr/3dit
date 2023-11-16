@@ -20,6 +20,18 @@ class service extends defaultitem {
       case "NGINX":
         this.style.color = 0x12c41b;
         break;
+      case "CEPH":
+        this.style.color = 0x9d1800;
+        break;
+      case "ETCD":
+        this.style.color = 0xbb8801;
+        break;
+      case "METALLB":
+        this.style.color = 0x56009d;
+        break;
+      case "KEEPALIVED":
+        this.style.color = 0x009d56;
+        break;
     }
     this.consoleprefix = '     +'+config.class+' '+config.name+' ';
     console.log(this.consoleprefix+'create element',this);

@@ -21,6 +21,8 @@ class home extends defaultitem{
         this.squareoffset = 0.2;            //hauteur des serveurs
 
         //console.log('3D >> '+this.typeObj+' >> new ');
+        this.cameraPosition = new THREE.Vector3(0,10,20);
+        this.cameraTarget = new THREE.Vector3(0,5,10);
     }
 
     /**

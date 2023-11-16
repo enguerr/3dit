@@ -3,15 +3,13 @@
  ************************/
 import * as THREE from 'three';
 import { defaultitem } from './defaultitem.js';
-import {connector} from "./connector.js";
-import {vrrp} from "./vrrp.js";
-class ip extends defaultitem {
+class vrrp extends defaultitem {
     constructor(scn,config,parent) {
         if (!config.style) config.style = {};
         if (!config.style.color)
-            config.style.color = 0x1155ff;
+            config.style.color = 0x009c55;
         super(scn,config,parent);
-        this.typeObj = 'ip';
+        this.typeObj = 'vrrp';
         this.widthmargin = 2;
         this.heightmargin = 2;
         this.depthmargin = 2;
@@ -21,40 +19,6 @@ class ip extends defaultitem {
         //console.log('3D >> '+this.typeObj+' >> new ');
         this.consoleprefix = '     +'+config.class+' '+config.ip+' ';
         console.log(this.consoleprefix+'create element',this);
-    }
-
-    /**
-     * createChildren
-     * @param el
-     */
-    create(el) {
-        if (el.vips) {
-            //find parent network
-            var net = this.getInfra().find('network',this.parents[0].config.net);
-            for (var i = 0; i < el.vips.length; i++) {
-                if (el.vips[i].net){
-                    net = this.getInfra().find('network',el.vips[i].net);
-                }
-                //ip object
-                if (!el.vips[i].style) el.vips[i].style = {};
-                if (!el.vips[i].style.color) el.vips[i].style.color = 0x0ea287;
-                if (!el.vips[i].style.direction) el.vips[i].style.direction = 'direct';
-                switch (el.vips[i].class){
-                    case "vrrp":
-                    default:
-                        var ipo = new vrrp(this.scn, el.vips[i],this);
-                        break;
-                }
-                //this.add(ipo);
-                net.add(ipo);
-                //ipo.addParent(net);
-                //ip connector
-                console.log(this.consoleprefix+' create ',this);
-                var conn = new connector(this,ipo,{direction:el.vips[i].style.direction,color:el.vips[i].style.color,visible:this.config.style.visible,decal:this.config.style.decal+(i*0.2)});
-                this.add(conn);
-                ipo.add(conn);
-            }
-        }
     }
     /**
      * createObject
@@ -91,7 +55,6 @@ class ip extends defaultitem {
         this.text = this.createText(0.2, 0.21,0.3,this.config.ip,this.mainobj,0.2,0xffffff,'top');
 
         this.configObject();
-        this.create(this.config);
     }
     /**
      * compute
@@ -103,4 +66,4 @@ class ip extends defaultitem {
     }
 
 }
-export{ip};
+export{vrrp};

@@ -60,7 +60,7 @@ class firewall extends defaultitem {
             for (var i = 0; i < el.interfaces.length; i++) {
                 if (!el.interfaces[i].style)el.interfaces[i].style={};
                 if (!el.interfaces[i].style.color)el.interfaces[i].style.color = this.style.color;
-                if (!el.interfaces[i].style.decal)el.interfaces[i].style.decal = i*0.2;
+                if (!el.interfaces[i].style.decal)el.interfaces[i].style.decal = i*0.4;
                 var nif = new networkinterface(this.scn, el.interfaces[i],this,el.interfaces[i].position);
                 this.add(nif);
             }
