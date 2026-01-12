@@ -44,6 +44,7 @@ class networkinterface extends defaultitem {
                 net.add(ipo);
                 //ip connector
                 var conn = new connector(this,ipo,{direction:this.direction,color:this.config.style.color,visible:this.config.style.visible,decal:this.config.style.decal+(i*0.2)});
+                conn.createObject();
                 this.add(conn);
                 ipo.add(conn);
                 console.log('createips',this);

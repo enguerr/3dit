@@ -1,783 +1,833 @@
 {
-  "sites": [
-    {
-      "name": "EXTERNE",
-      "class": "site",
-      "style": {
-        "childPosition": "horizontal",
-        "minWidth": 10
-      },
-      "zones": [
+    "sites": [
         {
-          "name": "INTERNET",
-          "class": "zone",
-          "style": {
-            "childPosition": "horizontal",
-            "minWidth": 5
-          },
-          "networks": [
-            {
-              "name": "INTERNET",
-              "class": "network",
-              "style": {
+            "name": "EXTERNE",
+            "class": "site",
+            "style": {
                 "childPosition": "horizontal",
-                "minWidth": 20,
-                "color": "#ffffff"
-              },
-              "network": "0.0.0.0/0"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "MARSEILLE",
-      "class": "site",
-      "style": {
-        "childPosition": "vertical",
-        "minWidth": 10
-      },
-      "zones": [
-        {
-          "name": "DMZ-WAN",
-          "class": "zone",
-          "style": {
-            "childPosition": "horizontal",
-            "minWidth": 5
-          },
-          "networks": [
-            {
-              "name": "DMZ-WAN-PROD",
-              "class": "network",
-              "style": {
-                "childPosition": "horizontal",
-                "minWidth": 20,
-                "maxcol": 6
-              },
-              "network": "172.18.216.0/24"
-            }
-          ]
-        },
-        {
-          "name": "VIP",
-          "class": "zone",
-          "networks": [
-            {
-              "name": "FRONT_VIP_PROD",
-              "class": "network",
-              "network": "172.18.129.0/24",
-              "style": {
-                "childPosition": "horizontal",
-                "minWidth": 20,
-                "maxcol": 6
-              }
-            }
-          ]
-        },
-        {
-          "name": "BGP",
-          "class": "zone",
-          "style": {
-            "childPosition": "vertical",
-            "minWidth": 5
-          },
-          "networks": [
-            {
-              "name": "INTERCO_BGP",
-              "class": "network",
-              "style": {
-                "childPosition": "horizontal",
-                "minWidth": 20,
-                "maxcol": 6
-              },
-              "network": "172.18.18.0/24"
-            }
-          ]
-        },
-        {
-          "name": "KUBERNETES_IN_OUT",
-          "class": "zone",
-          "style": {
-            "childPosition": "horizontal",
-            "minWidth": 5
-          },
-          "networks": [
-            {
-              "name": "KUBERNETES_INGRESS",
-              "class": "network",
-              "network": "172.18.17.0/24",
-              "style": {
-                "maxcol": 3
-              }
+                "minWidth": 10
             },
-            {
-              "name": "KUBERNETES_EGRESS",
-              "class": "network",
-              "network": "172.18.19.0/24",
-              "style": {
-                "maxcol": 3
-              }
-            }
-          ]
+            "zones": [
+                {
+                    "name": "INTERNET",
+                    "class": "zone",
+                    "style": {
+                        "childPosition": "horizontal",
+                        "minWidth": 5
+                    },
+                    "networks": [
+                        {
+                            "name": "INTERNET",
+                            "class": "network",
+                            "style": {
+                                "childPosition": "horizontal",
+                                "minWidth": 20,
+                                "color": "#ffffff"
+                            },
+                            "network": "0.0.0.0/0"
+                        }
+                    ]
+                }
+            ]
         },
         {
-          "name": "KUBERNETES_STORAGE",
-          "class": "zone",
-          "style": {
-            "childPosition": "vertical",
-            "minWidth": 5
-          },
-          "networks": [
-            {
-              "name": "COMPUTE_ACCESS",
-              "class": "network",
-              "network": "172.18.14.0/24",
-              "style": {
-                "minWidth": 20,
-                "maxcol": 4
-              }
+            "name": "MARSEILLE",
+            "class": "site",
+            "style": {
+                "childPosition": "vertical",
+                "minWidth": 10
             },
-            {
-              "name": "STORAGE_PUBLIC",
-              "class": "network",
-              "network": "172.18.15.0/24",
-              "style": {
-                "minWidth": 20,
-                "maxcol": 4
-              }
-            }
-          ]
-        },
-        {
-          "name": "KUBERNETES_PRIVATE",
-          "class": "zone",
-          "networks": [
-            {
-              "name": "PRIVATE_STORAGE",
-              "class": "network",
-              "network": "172.18.13.0/24",
-              "style": {
-                "minWidth": 20,
-                "maxcol": 4
-              }
-            }
-          ]
-        }
-      ]
-    }
-  ],
-  "instances": [
-    {
-      "name": "REVERSE_PROXY_01",
-      "class": "instance",
-      "interfaces": [
-        {
-          "name": "ens192",
-          "class": "interface",
-          "mac": "00:50:56:45:56:58",
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.216.248",
-              "vips": [
+            "zones": [
                 {
-                  "class": "vrrp",
-                  "ip": "172.18.216.10"
-                }
-              ],
-              "gateway": "172.18.216.1"
-            }
-          ],
-          "net": "DMZ-WAN-PROD"
-        }
-      ],
-      "cpu": 2,
-      "ram": 4096,
-      "os": "linux",
-      "storage": 60000,
-      "services": [
-        {
-          "name": "NGINX",
-          "class": "service"
-        }
-      ]
-    },
-    {
-      "name": "REVERSE_PROXY_02",
-      "class": "instance",
-      "interfaces": [
-        {
-          "name": "ens192",
-          "class": "interface",
-          "mac": "00:50:56:45:56:58",
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.216.249",
-              "gateway": "172.18.216.1"
-            }
-          ],
-          "net": "DMZ-WAN-PROD"
-        }
-      ],
-      "cpu": 2,
-      "ram": 4096,
-      "os": "linux",
-      "storage": 60000,
-      "services": [
-        {
-          "name": "NGINX",
-          "class": "service"
-        }
-      ]
-    },
-    {
-      "name": "LOAD_BALANCER_01",
-      "class": "instance",
-      "interfaces": [
-        {
-          "name": "ens192",
-          "class": "interface",
-          "mac": "00:50:56:45:56:58",
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.129.248",
-              "vips": [
+                    "name": "DMZ-WAN",
+                    "class": "zone",
+                    "style": {
+                        "childPosition": "horizontal",
+                        "minWidth": 5
+                    },
+                    "networks": [
+                        {
+                            "name": "DMZ-WAN-PROD",
+                            "class": "network",
+                            "style": {
+                                "childPosition": "horizontal",
+                                "minWidth": 20,
+                                "maxcol": 6
+                            },
+                            "network": "172.18.216.0/24"
+                        }
+                    ]
+                },
                 {
-                  "class": "vrrp",
-                  "ip": "172.18.129.10"
-                }
-              ],
-              "gateway": "172.18.129.1"
-            }
-          ],
-          "net": "FRONT_VIP_PROD"
-        }
-      ],
-      "cpu": 2,
-      "ram": 4096,
-      "os": "linux",
-      "storage": 60000,
-      "services": [
-        {
-          "name": "HAPROXY",
-          "class": "service"
-        }
-      ]
-    },
-    {
-      "name": "LOAD_BALANCER_02",
-      "class": "instance",
-      "interfaces": [
-        {
-          "name": "ens192",
-          "class": "interface",
-          "mac": "00:50:56:45:56:58",
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.129.249",
-              "gateway": "172.18.129.1"
-            }
-          ],
-          "net": "FRONT_VIP_PROD"
-        }
-      ],
-      "cpu": 2,
-      "ram": 4096,
-      "os": "linux",
-      "storage": 60000,
-      "services": [
-        {
-          "name": "HAPROXY",
-          "class": "service"
-        }
-      ]
-    },
-    {
-      "name": "K8S_COMPUTE_01",
-      "class": "instance",
-      "interfaces": [
-        {
-          "name": "ens192",
-          "class": "interface",
-          "position": "back",
-          "mac": "00:50:56:45:56:58",
-          "style": {
-            "color": "#00509c"
-          },
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.14.10",
-              "gateway": "172.18.14.1"
-            }
-          ],
-          "net": "COMPUTE_ACCESS"
-        },
-        {
-          "name": "ens192",
-          "class": "interface",
-          "mac": "00:50:56:45:56:58",
-          "position": "direct",
-          "style": {
-            "color": "#329500"
-          },
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.17.10",
-              "gateway": "172.18.17.1",
-              "vips": [
+                    "name": "VIP",
+                    "class": "zone",
+                    "networks": [
+                        {
+                            "name": "FRONT_VIP_PROD",
+                            "class": "network",
+                            "network": "172.18.129.0/24",
+                            "style": {
+                                "childPosition": "horizontal",
+                                "minWidth": 20,
+                                "maxcol": 6
+                            }
+                        }
+                    ]
+                },
                 {
-                  "class": "bgp",
-                  "ip": "172.18.18.2",
-                  "net": "INTERCO_BGP"
-                }
-              ]
-            }
-          ],
-          "net": "KUBERNETES_INGRESS"
-        },
-        {
-          "name": "ens192",
-          "class": "interface",
-          "position": "direct",
-          "mac": "00:50:56:45:56:58",
-          "style": {
-            "color": "#7b009c"
-          },
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.19.10",
-              "vips": [
+                    "name": "BGP",
+                    "class": "zone",
+                    "style": {
+                        "childPosition": "vertical",
+                        "minWidth": 5
+                    },
+                    "networks": [
+                        {
+                            "name": "INTERCO_BGP",
+                            "class": "network",
+                            "style": {
+                                "childPosition": "horizontal",
+                                "minWidth": 20,
+                                "maxcol": 6
+                            },
+                            "network": "172.18.18.0/24"
+                        }
+                    ]
+                },
                 {
-                  "class": "vrrp",
-                  "ip": "172.18.19.50"
+                    "name": "KUBERNETES_IN_OUT",
+                    "class": "zone",
+                    "style": {
+                        "childPosition": "horizontal",
+                        "minWidth": 5
+                    },
+                    "networks": [
+                        {
+                            "name": "KUBERNETES_INGRESS",
+                            "class": "network",
+                            "network": "172.18.17.0/24",
+                            "style": {
+                                "maxcol": 3
+                            }
+                        },
+                        {
+                            "name": "KUBERNETES_EGRESS",
+                            "class": "network",
+                            "network": "172.18.19.0/24",
+                            "style": {
+                                "maxcol": 3
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "KUBERNETES_STORAGE",
+                    "class": "zone",
+                    "style": {
+                        "childPosition": "vertical",
+                        "minWidth": 5
+                    },
+                    "networks": [
+                        {
+                            "name": "COMPUTE_ACCESS",
+                            "class": "network",
+                            "network": "172.18.14.0/24",
+                            "style": {
+                                "minWidth": 20,
+                                "maxcol": 4
+                            }
+                        },
+                        {
+                            "name": "STORAGE_PUBLIC",
+                            "class": "network",
+                            "network": "172.18.15.0/24",
+                            "style": {
+                                "minWidth": 20,
+                                "maxcol": 4
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "KUBERNETES_PRIVATE",
+                    "class": "zone",
+                    "networks": [
+                        {
+                            "name": "PRIVATE_STORAGE",
+                            "class": "network",
+                            "network": "172.18.13.0/24",
+                            "style": {
+                                "minWidth": 20,
+                                "maxcol": 4
+                            }
+                        }
+                    ]
                 }
-              ],
-              "gateway": "172.18.17.1"
-            }
-          ],
-          "net": "KUBERNETES_EGRESS"
+            ]
         }
-      ],
-      "cpu": 2,
-      "ram": 4096,
-      "os": "linux",
-      "storage": 60000,
-      "services": [
+    ],
+    "instances": [
         {
-          "name": "KUBELET",
-          "class": "service"
-        },{
-          "name": "ETCD",
-          "class": "service"
-        }
-      ]
-    },
-    {
-      "name": "K8S_COMPUTE_02",
-      "class": "instance",
-      "interfaces": [
-        {
-          "name": "ens192",
-          "class": "interface",
-          "position": "back",
-          "mac": "00:50:56:45:56:58",
-          "style": {
-            "color": "#00509c"
-          },
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.14.11",
-              "gateway": "172.18.14.1"
-            }
-          ],
-          "net": "COMPUTE_ACCESS"
+            "name": "REVERSE_PROXY_01",
+            "class": "instance",
+            "interfaces": [
+                {
+                    "name": "ens192",
+                    "class": "interface",
+                    "mac": "00:50:56:45:56:58",
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.216.248",
+                            "vips": [
+                                {
+                                    "class": "vrrp",
+                                    "ip": "172.18.216.10"
+                                }
+                            ],
+                            "gateway": "172.18.216.1"
+                        }
+                    ],
+                    "net": "DMZ-WAN-PROD"
+                }
+            ],
+            "cpu": 2,
+            "ram": 4096,
+            "os": "linux",
+            "storage": 60000,
+            "services": [
+                {
+                    "name": "NGINX",
+                    "class": "service"
+                }
+            ]
         },
         {
-          "name": "ens192",
-          "class": "interface",
-          "position": "direct",
-          "mac": "00:50:56:45:56:58",
-          "style": {
-            "color": "#329500"
-          },
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.17.11",
-              "gateway": "172.18.17.1"
-            }
-          ],
-          "net": "KUBERNETES_INGRESS"
+            "name": "REVERSE_PROXY_02",
+            "class": "instance",
+            "interfaces": [
+                {
+                    "name": "ens192",
+                    "class": "interface",
+                    "mac": "00:50:56:45:56:58",
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.216.249",
+                            "gateway": "172.18.216.1"
+                        }
+                    ],
+                    "net": "DMZ-WAN-PROD"
+                }
+            ],
+            "cpu": 2,
+            "ram": 4096,
+            "os": "linux",
+            "storage": 60000,
+            "services": [
+                {
+                    "name": "NGINX",
+                    "class": "service"
+                }
+            ]
         },
         {
-          "name": "ens192",
-          "class": "interface",
-          "position": "direct",
-          "mac": "00:50:56:45:56:58",
-          "style": {
-            "color": "#7b009c"
-          },
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.19.11",
-              "gateway": "172.18.17.1"
-            }
-          ],
-          "net": "KUBERNETES_EGRESS"
-        }
-      ],
-      "cpu": 2,
-      "ram": 4096,
-      "os": "linux",
-      "storage": 60000,
-      "services": [
-        {
-          "name": "KUBELET",
-          "class": "service"
-        },{
-          "name": "ETCD",
-          "class": "service"
-        }
-      ]
-    },
-    {
-      "name": "K8S_COMPUTE_03",
-      "class": "instance",
-      "interfaces": [
-        {
-          "name": "ens192",
-          "class": "interface",
-          "position": "back",
-          "mac": "00:50:56:45:56:58",
-          "style": {
-            "color": "#00509c"
-          },
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.14.12",
-              "gateway": "172.18.14.1"
-            }
-          ],
-          "net": "COMPUTE_ACCESS"
+            "name": "LOAD_BALANCER_01",
+            "class": "instance",
+            "interfaces": [
+                {
+                    "name": "ens192",
+                    "class": "interface",
+                    "mac": "00:50:56:45:56:58",
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.129.248",
+                            "vips": [
+                                {
+                                    "class": "vrrp",
+                                    "ip": "172.18.129.10"
+                                }
+                            ],
+                            "gateway": "172.18.129.1"
+                        }
+                    ],
+                    "net": "FRONT_VIP_PROD"
+                }
+            ],
+            "cpu": 2,
+            "ram": 4096,
+            "os": "linux",
+            "storage": 60000,
+            "services": [
+                {
+                    "name": "HAPROXY",
+                    "class": "service"
+                }
+            ]
         },
         {
-          "name": "ens192",
-          "class": "interface",
-          "position": "direct",
-          "mac": "00:50:56:45:56:58",
-          "style": {
-            "color": "#329500"
-          },
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.17.12",
-              "gateway": "172.18.17.1"
-            }
-          ],
-          "net": "KUBERNETES_INGRESS"
+            "name": "LOAD_BALANCER_02",
+            "class": "instance",
+            "interfaces": [
+                {
+                    "name": "ens192",
+                    "class": "interface",
+                    "mac": "00:50:56:45:56:58",
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.129.249",
+                            "gateway": "172.18.129.1"
+                        }
+                    ],
+                    "net": "FRONT_VIP_PROD"
+                }
+            ],
+            "cpu": 2,
+            "ram": 4096,
+            "os": "linux",
+            "storage": 60000,
+            "services": [
+                {
+                    "name": "HAPROXY",
+                    "class": "service"
+                }
+            ]
         },
         {
-          "name": "ens192",
-          "class": "interface",
-          "position": "direct",
-          "style": {
-            "color": "#7b009c"
-          },
-          "mac": "00:50:56:45:56:58",
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.19.12",
-              "gateway": "172.18.17.1"
-            }
-          ],
-          "net": "KUBERNETES_EGRESS"
-        }
-      ],
-      "cpu": 2,
-      "ram": 4096,
-      "os": "linux",
-      "storage": 60000,
-      "services": [
-        {
-          "name": "KUBELET",
-          "class": "service"
-        },{
-          "name": "ETCD",
-          "class": "service"
-        }
-      ]
-    },
-    {
-      "name": "K8S_STORAGE_01",
-      "class": "instance",
-      "interfaces": [
-        {
-          "name": "ens192",
-          "class": "interface",
-          "mac": "00:50:56:45:56:58",
-          "style": {
-            "color": "#c18c00"
-          },
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.15.10",
-              "gateway": "172.18.15.1"
-            }
-          ],
-          "net": "STORAGE_PUBLIC"
+            "name": "K8S_COMPUTE_01",
+            "class": "instance",
+            "interfaces": [
+                {
+                    "name": "ens192",
+                    "class": "interface",
+                    "position": "back",
+                    "mac": "00:50:56:45:56:58",
+                    "style": {
+                        "color": "#00509c"
+                    },
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.14.10",
+                            "gateway": "172.18.14.1"
+                        }
+                    ],
+                    "net": "COMPUTE_ACCESS"
+                },
+                {
+                    "name": "ens192",
+                    "class": "interface",
+                    "mac": "00:50:56:45:56:58",
+                    "position": "direct",
+                    "style": {
+                        "color": "#329500"
+                    },
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.17.10",
+                            "gateway": "172.18.17.1",
+                            "vips": [
+                                {
+                                    "class": "bgp",
+                                    "ip": "172.18.18.2",
+                                    "net": "INTERCO_BGP"
+                                }
+                            ]
+                        }
+                    ],
+                    "net": "KUBERNETES_INGRESS"
+                },
+                {
+                    "name": "ens192",
+                    "class": "interface",
+                    "position": "direct",
+                    "mac": "00:50:56:45:56:58",
+                    "style": {
+                        "color": "#7b009c"
+                    },
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.19.10",
+                            "vips": [
+                                {
+                                    "class": "vrrp",
+                                    "ip": "172.18.19.50"
+                                }
+                            ],
+                            "gateway": "172.18.17.1"
+                        }
+                    ],
+                    "net": "KUBERNETES_EGRESS"
+                }
+            ],
+            "cpu": 2,
+            "ram": 4096,
+            "os": "linux",
+            "storage": 60000,
+            "services": [
+                {
+                    "name": "KUBELET",
+                    "class": "service"
+                },
+                {
+                    "name": "ETCD",
+                    "class": "service"
+                }
+            ]
         },
         {
-          "name": "ens192",
-          "position": "direct-back",
-          "class": "interface",
-          "mac": "00:50:56:45:56:58",
-          "style": {
-            "color": "#c14c00"
-          },
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.13.10",
-              "gateway": "172.18.13.1"
-            }
-          ],
-          "net": "PRIVATE_STORAGE"
-        }
-      ],
-      "cpu": 2,
-      "ram": 4096,
-      "os": "linux",
-      "storage": 60000,
-      "services": [
-        {
-          "name": "KUBELET",
-          "class": "service"
-        },{
-          "name": "ETCD",
-          "class": "service"
-        },{
-          "name": "CEPH",
-          "class": "service"
-        }
-      ]
-    },
-    {
-      "name": "K8S_STORAGE_02",
-      "class": "instance",
-      "interfaces": [
-        {
-          "name": "ens192",
-          "class": "interface",
-          "mac": "00:50:56:45:56:58",
-          "style": {
-            "color": "#c18c00"
-          },
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.15.11",
-              "gateway": "172.18.15.1"
-            }
-          ],
-          "net": "STORAGE_PUBLIC"
+            "name": "K8S_COMPUTE_02",
+            "class": "instance",
+            "interfaces": [
+                {
+                    "name": "ens192",
+                    "class": "interface",
+                    "position": "back",
+                    "mac": "00:50:56:45:56:58",
+                    "style": {
+                        "color": "#00509c"
+                    },
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.14.11",
+                            "gateway": "172.18.14.1"
+                        }
+                    ],
+                    "net": "COMPUTE_ACCESS"
+                },
+                {
+                    "name": "ens192",
+                    "class": "interface",
+                    "position": "direct",
+                    "mac": "00:50:56:45:56:58",
+                    "style": {
+                        "color": "#329500"
+                    },
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.17.11",
+                            "gateway": "172.18.17.1"
+                        }
+                    ],
+                    "net": "KUBERNETES_INGRESS"
+                },
+                {
+                    "name": "ens192",
+                    "class": "interface",
+                    "position": "direct",
+                    "mac": "00:50:56:45:56:58",
+                    "style": {
+                        "color": "#7b009c"
+                    },
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.19.11",
+                            "gateway": "172.18.17.1"
+                        }
+                    ],
+                    "net": "KUBERNETES_EGRESS"
+                }
+            ],
+            "cpu": 2,
+            "ram": 4096,
+            "os": "linux",
+            "storage": 60000,
+            "services": [
+                {
+                    "name": "KUBELET",
+                    "class": "service"
+                },
+                {
+                    "name": "ETCD",
+                    "class": "service"
+                }
+            ]
         },
         {
-          "name": "ens192",
-          "class": "interface",
-          "mac": "00:50:56:45:56:58",
-          "position": "direct-back",
-          "style": {
-            "color": "#c14c00"
-          },
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.13.11",
-              "gateway": "172.18.13.1"
-            }
-          ],
-          "net": "PRIVATE_STORAGE"
-        }
-      ],
-      "cpu": 2,
-      "ram": 4096,
-      "os": "linux",
-      "storage": 60000,
-      "services": [
-        {
-          "name": "KUBELET",
-          "class": "service"
-        },{
-          "name": "ETCD",
-          "class": "service"
-        },{
-          "name": "CEPH",
-          "class": "service"
-        }
-      ]
-    },
-    {
-      "name": "K8S_STORAGE_03",
-      "class": "instance",
-      "interfaces": [
-        {
-          "name": "ens192",
-          "class": "interface",
-          "mac": "00:50:56:45:56:58",
-          "style": {
-            "color": "#c18c00"
-          },
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.15.12",
-              "gateway": "172.18.15.1"
-            }
-          ],
-          "net": "STORAGE_PUBLIC"
+            "name": "K8S_COMPUTE_03",
+            "class": "instance",
+            "interfaces": [
+                {
+                    "name": "ens192",
+                    "class": "interface",
+                    "position": "back",
+                    "mac": "00:50:56:45:56:58",
+                    "style": {
+                        "color": "#00509c"
+                    },
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.14.12",
+                            "gateway": "172.18.14.1"
+                        }
+                    ],
+                    "net": "COMPUTE_ACCESS"
+                },
+                {
+                    "name": "ens192",
+                    "class": "interface",
+                    "position": "direct",
+                    "mac": "00:50:56:45:56:58",
+                    "style": {
+                        "color": "#329500"
+                    },
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.17.12",
+                            "gateway": "172.18.17.1"
+                        }
+                    ],
+                    "net": "KUBERNETES_INGRESS"
+                },
+                {
+                    "name": "ens192",
+                    "class": "interface",
+                    "position": "direct",
+                    "style": {
+                        "color": "#7b009c"
+                    },
+                    "mac": "00:50:56:45:56:58",
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.19.12",
+                            "gateway": "172.18.17.1"
+                        }
+                    ],
+                    "net": "KUBERNETES_EGRESS"
+                }
+            ],
+            "cpu": 2,
+            "ram": 4096,
+            "os": "linux",
+            "storage": 60000,
+            "services": [
+                {
+                    "name": "KUBELET",
+                    "class": "service"
+                },
+                {
+                    "name": "ETCD",
+                    "class": "service"
+                }
+            ]
         },
         {
-          "name": "ens192",
-          "class": "interface",
-          "position": "direct-back",
-          "style": {
-            "color": "#c14c00"
-          },
-          "mac": "00:50:56:45:56:58",
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.13.12",
-              "gateway": "172.18.13.1"
-            }
-          ],
-          "net": "PRIVATE_STORAGE"
-        }
-      ],
-      "cpu": 2,
-      "ram": 4096,
-      "os": "linux",
-      "storage": 60000,
-      "services": [
-        {
-          "name": "KUBELET",
-          "class": "service"
-        },{
-          "name": "ETCD",
-          "class": "service"
-        },{
-          "name": "CEPH",
-          "class": "service"
-        }
-      ]
-    }
-  ],
-  "networkdevices": [
-    {
-      "name": "FIREWALLL",
-      "class": "firewall",
-      "style": {
-        "position": {
-          "type": "relative",
-          "class": "site",
-          "name": "MARSEILLE",
-          "top": -5
-        }
-      },
-      "interfaces": [
-        {
-          "name": "port1",
-          "class": "interface",
-          "position": "front",
-          "mac": "00:50:56:45:56:58",
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "45.85.132.16"
-            }
-          ],
-          "net": "INTERNET"
+            "name": "K8S_STORAGE_01",
+            "class": "instance",
+            "interfaces": [
+                {
+                    "name": "ens192",
+                    "class": "interface",
+                    "mac": "00:50:56:45:56:58",
+                    "style": {
+                        "color": "#c18c00"
+                    },
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.15.10",
+                            "gateway": "172.18.15.1"
+                        }
+                    ],
+                    "net": "STORAGE_PUBLIC"
+                },
+                {
+                    "name": "ens192",
+                    "position": "direct-back",
+                    "class": "interface",
+                    "mac": "00:50:56:45:56:58",
+                    "style": {
+                        "color": "#c14c00"
+                    },
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.13.10",
+                            "gateway": "172.18.13.1"
+                        }
+                    ],
+                    "net": "PRIVATE_STORAGE"
+                }
+            ],
+            "cpu": 2,
+            "ram": 4096,
+            "os": "linux",
+            "storage": 60000,
+            "services": [
+                {
+                    "name": "KUBELET",
+                    "class": "service"
+                },
+                {
+                    "name": "ETCD",
+                    "class": "service"
+                },
+                {
+                    "name": "CEPH",
+                    "class": "service"
+                }
+            ]
         },
         {
-          "name": "port3",
-          "class": "interface",
-          "position": "side",
-          "mac": "00:50:56:45:56:58",
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.27.216.1"
-            }
-          ],
-          "net": "DMZ-WAN-PROD"
+            "name": "K8S_STORAGE_02",
+            "class": "instance",
+            "interfaces": [
+                {
+                    "name": "ens192",
+                    "class": "interface",
+                    "mac": "00:50:56:45:56:58",
+                    "style": {
+                        "color": "#c18c00"
+                    },
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.15.11",
+                            "gateway": "172.18.15.1"
+                        }
+                    ],
+                    "net": "STORAGE_PUBLIC"
+                },
+                {
+                    "name": "ens192",
+                    "class": "interface",
+                    "mac": "00:50:56:45:56:58",
+                    "position": "direct-back",
+                    "style": {
+                        "color": "#c14c00"
+                    },
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.13.11",
+                            "gateway": "172.18.13.1"
+                        }
+                    ],
+                    "net": "PRIVATE_STORAGE"
+                }
+            ],
+            "cpu": 2,
+            "ram": 4096,
+            "os": "linux",
+            "storage": 60000,
+            "services": [
+                {
+                    "name": "KUBELET",
+                    "class": "service"
+                },
+                {
+                    "name": "ETCD",
+                    "class": "service"
+                },
+                {
+                    "name": "CEPH",
+                    "class": "service"
+                }
+            ]
         },
         {
-          "name": "port5",
-          "class": "interface",
-          "position": "side",
-          "mac": "00:50:56:45:56:58",
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.27.129.1"
-            }
-          ],
-          "net": "FRONT_VIP_PROD"
-        },
+            "name": "K8S_STORAGE_03",
+            "class": "instance",
+            "interfaces": [
+                {
+                    "name": "ens192",
+                    "class": "interface",
+                    "mac": "00:50:56:45:56:58",
+                    "style": {
+                        "color": "#c18c00"
+                    },
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.15.12",
+                            "gateway": "172.18.15.1"
+                        }
+                    ],
+                    "net": "STORAGE_PUBLIC"
+                },
+                {
+                    "name": "ens192",
+                    "class": "interface",
+                    "position": "direct-back",
+                    "style": {
+                        "color": "#c14c00"
+                    },
+                    "mac": "00:50:56:45:56:58",
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.13.12",
+                            "gateway": "172.18.13.1"
+                        }
+                    ],
+                    "net": "PRIVATE_STORAGE"
+                }
+            ],
+            "cpu": 2,
+            "ram": 4096,
+            "os": "linux",
+            "storage": 60000,
+            "services": [
+                {
+                    "name": "KUBELET",
+                    "class": "service"
+                },
+                {
+                    "name": "ETCD",
+                    "class": "service"
+                },
+                {
+                    "name": "CEPH",
+                    "class": "service"
+                }
+            ]
+        }
+    ],
+    "networkdevices": [
         {
-          "name": "port6",
-          "class": "interface",
-          "position": "side",
-          "mac": "00:50:56:45:56:58",
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.18.1"
+            "name": "FIREWALLL",
+            "class": "firewall",
+            "style": {
+                "position": {
+                    "type": "relative",
+                    "class": "site",
+                    "name": "MARSEILLE",
+                    "top": -5
+                }
             },
-            {
-              "class": "ip",
-              "ip": "172.18.17.1",
-              "net": "KUBERNETES_INGRESS"
+            "interfaces": [
+                {
+                    "name": "port1",
+                    "class": "interface",
+                    "position": "front",
+                    "mac": "00:50:56:45:56:58",
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "45.85.132.16"
+                        }
+                    ],
+                    "net": "INTERNET"
+                },
+                {
+                    "name": "port3",
+                    "class": "interface",
+                    "position": "side",
+                    "mac": "00:50:56:45:56:58",
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.27.216.1"
+                        }
+                    ],
+                    "net": "DMZ-WAN-PROD"
+                },
+                {
+                    "name": "port5",
+                    "class": "interface",
+                    "position": "side",
+                    "mac": "00:50:56:45:56:58",
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.27.129.1"
+                        }
+                    ],
+                    "net": "FRONT_VIP_PROD"
+                },
+                {
+                    "name": "port6",
+                    "class": "interface",
+                    "position": "side",
+                    "mac": "00:50:56:45:56:58",
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.18.1"
+                        },
+                        {
+                            "class": "ip",
+                            "ip": "172.18.17.1",
+                            "net": "KUBERNETES_INGRESS"
+                        }
+                    ],
+                    "net": "INTERCO_BGP"
+                },
+                {
+                    "name": "port7",
+                    "class": "interface",
+                    "position": "side",
+                    "mac": "00:50:56:45:56:58",
+                    "ips": [
+                        {
+                            "class": "ip",
+                            "ip": "172.18.19.1"
+                        }
+                    ],
+                    "net": "KUBERNETES_EGRESS"
+                }
+            ]
+        }
+    ],
+    "pois": [
+        {
+            "title": "Vue d'ensemble",
+            "camera": {
+                "x": -16.31324956674959,
+                "y": 12.271914815097718,
+                "z": -88.56302421961844
+            },
+            "target": {
+                "x": -12.529410532234273,
+                "y": 7.956896241179038,
+                "z": -80.37381321564406
             }
-          ],
-          "net": "INTERCO_BGP"
         },
         {
-          "name": "port7",
-          "class": "interface",
-          "position": "side",
-          "mac": "00:50:56:45:56:58",
-          "ips": [
-            {
-              "class": "ip",
-              "ip": "172.18.19.1"
+            "camera": {
+                "x": -4.153224886169469,
+                "y": 25.22599546932488,
+                "z": -38.273322091153474
+            },
+            "target": {
+                "x": -2.9212788659565727,
+                "y": 16.35609695423652,
+                "z": -42.723851198497336
             }
-          ],
-          "net": "KUBERNETES_EGRESS"
+        },
+        {
+            "camera": {
+                "x": 13.5778966341387,
+                "y": 15.838685467610167,
+                "z": -24.419313005546243
+            },
+            "target": {
+                "x": 8.334226146044994,
+                "y": 8.64135497358265,
+                "z": -28.96929691453282
+            }
+        },
+        {
+            "camera": {
+                "x": -8.100142631154268,
+                "y": 15.418859870837691,
+                "z": 1.032084169847348
+            },
+            "target": {
+                "x": -5.104460356940894,
+                "y": 7.655363363115609,
+                "z": -4.513545612832961
+            }
         }
-      ]
-    }
-  ],
-  "pois": [
-    {
-      "title": "Vue d'ensemble",
-      "camera":{"x":-16.31324956674959,"y":12.271914815097718,"z":-88.56302421961844},
-      "target":{"x":-12.529410532234273,"y":7.956896241179038,"z":-80.37381321564406}
-    },
-    {"camera":{"x":-4.153224886169469,"y":25.22599546932488,"z":-38.273322091153474},"target":{"x":-2.9212788659565727,"y":16.35609695423652,"z":-42.723851198497336}},
-    {"camera":{"x":13.5778966341387,"y":15.838685467610167,"z":-24.419313005546243},"target":{"x":8.334226146044994,"y":8.64135497358265,"z":-28.96929691453282}},
-    {"camera":{"x":-8.100142631154268,"y":15.418859870837691,"z":1.032084169847348},"target":{"x":-5.104460356940894,"y":7.655363363115609,"z":-4.513545612832961}}
-  ]
+    ]
 }

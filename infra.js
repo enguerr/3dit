@@ -42,26 +42,35 @@ class infra extends defaultitem{
     /**
      * init
      * Analyze config and create objects
+     * @param {boolean} withNav - Enable navigation panel (default true)
      */
-    init(){
-        this.nav = this.makeNavPanel();
-        this.scn.camera.add(this.nav);
+    init(withNav = true){
+        if (withNav) {
+            this.nav = this.makeNavPanel();
+            this.scn.camera.add(this.nav);
+        }
         this.scn.add(this);
         //process network
         var consoleprefix = ' ** ';
         console.warn(consoleprefix+'NETWORK PROCESS'+consoleprefix);
-        for (var i = 0;i < this.config.sites.length;i++) {
-            this.create(this.config.sites[i], this);
+        if (this.config.sites) {
+            for (var i = 0;i < this.config.sites.length;i++) {
+                this.create(this.config.sites[i], this);
+            }
         }
         //process networkdevice
         console.warn(consoleprefix+'NETWORK DEVICE PROCESS'+consoleprefix);
-        for (var i = 0;i < this.config.networkdevices.length;i++) {
-            this.create(this.config.networkdevices[i], this);
+        if (this.config.networkdevices) {
+            for (var i = 0;i < this.config.networkdevices.length;i++) {
+                this.create(this.config.networkdevices[i], this);
+            }
         }
         //process instances
         console.warn(consoleprefix+'INSTANCE PROCESS'+consoleprefix);
-        for (var i = 0;i < this.config.instances.length;i++) {
-            this.create(this.config.instances[i], this);
+        if (this.config.instances) {
+            for (var i = 0;i < this.config.instances.length;i++) {
+                this.create(this.config.instances[i], this);
+            }
         }
     }
 
@@ -216,7 +225,21 @@ class infra extends defaultitem{
         //console.log('DEBUG find  INFRA >> test name ',name,' type ',type,this.config);
         let found = false;
         //recherche locale
-        if (this.config.class == type && this.config.name == name) return this;
+        // Match by Name OR UUID (if name param looks like a UUID or matches config.uuid)
+        if (this.config.class == type) {
+            if (this.config.name == name) return this;
+            if (this.config.uuid == name) return this;
+        }
+
+        // Optimization: Search directly in flat lists if available
+        if (type === 'network' && this.networks) {
+            for (let i in this.networks) {
+                if (this.networks[i].config.name === name || (this.networks[i].config.uuid && this.networks[i].config.uuid === name)) {
+                    return this.networks[i];
+                }
+            }
+        }
+
         //recherche enfants
         if (this.instances) for (let i in this.instances) {
             found = this.instances[i].find(type,name);
@@ -225,6 +248,14 @@ class infra extends defaultitem{
         if (this.sites) for (let i in this.sites) {
             found = this.sites[i].find(type,name);
             if (found) return found;
+        }
+        // Also check networkdevices (firewalls) as they can be targets too?
+        if (this.networkdevices) for (let i in this.networkdevices) {
+             // networkdevices items need a find method too, assuming they extend defaultitem or similar structure
+             if(this.networkdevices[i].find) {
+                found = this.networkdevices[i].find(type,name);
+                if (found) return found;
+             }
         }
         return false;
     }

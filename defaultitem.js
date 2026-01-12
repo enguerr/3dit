@@ -206,10 +206,14 @@ class defaultitem {
      * find the network by name
      */
     find(type,name){
-//console.log('DEBUG find >> test name ',name,' type ',type,this.config);
+        // console.log(`DEBUG find [${this.config.name}] looking for ${type}:${name}`);
         let found = false;
         //recherche locale
-        if (this.config.class == type && this.config.name == name) return this;
+        if (this.config.class == type) {
+            // console.log(`  > Checking ${this.config.name} (UUID: ${this.config.uuid}) vs ${name}`);
+            if (this.config.name == name) return this;
+            if (this.config.uuid && this.config.uuid == name) return this;
+        }
         //recherche enfants
         if (this.children) for (let i in this.children) {
             found = this.children[i].find(type,name);

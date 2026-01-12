@@ -3,5 +3,8 @@
     "dat.gui": "^0.7.9",
     "three": "^0.158.0",
     "three-mesh-ui": "^6.5.4"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
   }
 }

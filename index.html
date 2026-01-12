@@ -1,20 +1,346 @@
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Network Supervision</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         canvas {
             width: 100%;
-            height: 100%
+            height: 100%;
+            display: block;
+        }
+
+        /* Sidebar Menu */
+        #sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 60px;
+            background-color: #2c3e50;
+            color: white;
+            transition: width 0.3s ease;
+            z-index: 1000;
+            overflow: hidden;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #sidebar:hover {
+            width: 250px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 20px 0;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background-color: #34495e;
+            border-left: 4px solid #3498db;
+        }
+
+        .menu-icon {
+            width: 60px;
+            text-align: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .menu-text {
+            opacity: 0;
+            transition: opacity 0.2s;
+            margin-left: 10px;
+            font-weight: 500;
+        }
+
+        #sidebar:hover .menu-text {
+            opacity: 1;
+        }
+
+        #editor_container {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 60px; /* Width of collapsed sidebar */
+            right: 0;
+            bottom: 0;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 0; /* Remove padding to handle layout manually */
+            z-index: 900;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #editor_header {
+            height: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            background-color: #252526;
+            border-bottom: 1px solid #3e3e42;
+        }
+
+        /* Tabs Styles */
+        .editor-tabs {
+            display: flex;
+            background-color: #252526;
+            padding-left: 20px;
+            border-bottom: 1px solid #3e3e42;
+        }
+
+        .tab-btn {
+            background-color: transparent;
+            border: none;
+            color: #969696;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 13px;
+            border-right: 1px solid #3e3e42;
+        }
+
+        .tab-btn:hover {
+            color: white;
+            background-color: #2d2d2d;
+        }
+
+        .tab-btn.active {
+            color: white;
+            background-color: #1e1e1e;
+            border-top: 2px solid #007acc;
+        }
+
+        /* Tab Content Areas */
+        .tab-content {
+            flex-grow: 1;
+            display: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        #json_editor {
+            width: 100%;
+            height: 100%;
+            background-color: #1e1e1e;
+            color: #dcdcdc;
+            border: none;
+            padding: 10px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        /* Visual Builder Layout */
+        #builder_layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        #builder_canvas {
+            flex-grow: 1;
+            background-color: #000;
+            position: relative;
+        }
+
+        #builder_palette {
+            width: 400px; /* Widened from 300px */
+            background-color: #252526;
+            border-left: 1px solid #3e3e42;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #palette_library {
+            padding: 10px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        #palette_inspector {
+            padding: 10px;
+            background-color: #1e1e1e;
+            border-top: 1px solid #3e3e42;
+            flex-grow: 1;
+            display: none; /* Hidden by default */
+            overflow-y: auto;
+        }
+
+        .inspector-field {
+            margin-bottom: 5px; /* Reduced margin */
+            display: flex; /* Flex layout */
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .inspector-label {
+            display: block;
+            font-size: 12px;
+            color: #ccc; /* Lighter color */
+            margin-bottom: 0; /* Remove bottom margin */
+            margin-right: 10px;
+            flex-shrink: 0;
+            width: 120px; /* Fixed width for labels for alignment */
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .inspector-input {
+            width: 100%;
+            background-color: #333;
+            border: 1px solid #444;
+            color: white;
+            padding: 4px; /* Reduced padding */
+            font-size: 12px;
+            box-sizing: border-box;
+            flex-grow: 1; /* Take remaining space */
+        }
+
+        .palette-item {
+            background-color: #333;
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .palette-item:hover {
+            background-color: #444;
+        }
+        
+        .action-btn {
+            background-color: #0e639c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            border-radius: 2px;
+        }
+        
+        .action-btn:hover {
+            background-color: #1177bb;
+        }
+
+        /* Adjust main canvas container to leave space for collapsed sidebar */
+        #infra_map {
+            margin-left: 60px;
+            width: calc(100% - 60px);
         }
     </style>
     <script src="lib/libs/tween.min.js"></script>
 </head>
 <body>
-<div id="infra_map" style="width: 100%;height:100%"></div>
+
+<!-- Sidebar -->
+<div id="sidebar">
+    <div class="menu-item active" onclick="switchMode('view', this)">
+        <div class="menu-icon"><i class="fas fa-cube"></i></div>
+        <div class="menu-text">Visualisation 3D</div>
+    </div>
+    <div class="menu-item" onclick="switchMode('edit', this)">
+        <div class="menu-icon"><i class="fas fa-code"></i></div>
+        <div class="menu-text">Éditeur de Scène</div>
+    </div>
+</div>
+
+<!-- Editor Container -->
+<div id="editor_container" style="display:none;">
+    <div id="editor_header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <h3>Projet :</h3>
+            <select id="file_selector" onchange="loadSelectedFile()" style="padding: 5px; background: #3c3c3c; color: white; border: 1px solid #555;">
+                <option value="" disabled selected>Choisir un fichier...</option>
+            </select>
+            <button class="action-btn" onclick="window.builder.createNewScene()"><i class="fas fa-plus"></i> Nouveau</button>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="action-btn" onclick="applyJsonChanges(false)">Appliquer (Local)</button>
+            <button class="action-btn" onclick="saveFile()" style="background-color: #2da042;">Sauvegarder</button>
+        </div>
+    </div>
+    
+    <div class="editor-tabs">
+        <button class="tab-btn active" onclick="openTab('visual')">Constructeur 3D</button>
+        <button class="tab-btn" onclick="openTab('json')">Éditeur JSON</button>
+    </div>
+
+    <!-- Tab 1: Visual Builder (Default) -->
+    <div id="tab_visual" class="tab-content active">
+        <div id="builder_layout">
+            <div id="builder_canvas"></div>
+            <div id="builder_palette">
+                <!-- Library Section -->
+                <div id="palette_library">
+                    <h4 style="margin-top:0;">Objets Disponibles</h4>
+                    <div class="palette-item" onclick="window.builder.addObjectToScene('site')">
+                        <i class="fas fa-building"></i> Site
+                    </div>
+                    <div class="palette-item" onclick="window.builder.addObjectToScene('zone')">
+                        <i class="fas fa-vector-square"></i> Zone
+                    </div>
+                    <div class="palette-item" onclick="window.builder.addObjectToScene('network')">
+                        <i class="fas fa-network-wired"></i> Réseau
+                    </div>
+                    <div class="palette-item" onclick="window.builder.addObjectToScene('instance')">
+                        <i class="fas fa-server"></i> Instance
+                    </div>
+                    <div class="palette-item" onclick="window.builder.addObjectToScene('firewall')">
+                        <i class="fas fa-shield-alt"></i> Firewall/Device
+                    </div>
+                    <div class="palette-item" onclick="window.builder.addObjectToScene('interface')">
+                        <i class="fas fa-ethernet"></i> Interface
+                    </div>
+                    <div class="palette-item" onclick="window.builder.addObjectToScene('ip')">
+                        <i class="fas fa-map-marker-alt"></i> IP
+                    </div>
+                    <div class="palette-item" onclick="window.builder.addObjectToScene('service')">
+                        <i class="fas fa-cogs"></i> Service
+                    </div>
+                    <hr style="border-color:#444">
+                    <small style="color:#888">Cliquez pour ajouter au JSON</small>
+                </div>
+
+                <!-- Inspector Section -->
+                <div id="palette_inspector">
+                    <h4 style="margin-top:0; border-bottom: 1px solid #444; padding-bottom: 5px;">Inspecteur</h4>
+                    <div id="inspector_content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 2: JSON -->
+    <div id="tab_json" class="tab-content">
+        <textarea id="json_editor" spellcheck="false"></textarea>
+    </div>
+</div>
+
+<div id="infra_map" style="width: calc(100% - 60px); height:100%; margin-left: 60px;"></div>
 <script type="importmap">
     {
         "imports": {
@@ -25,11 +351,15 @@
     }
     </script>
 <script type="module">
+  import * as THREE from "./node_modules/three/build/three.module.min.js";
+  window.THREE = THREE; // Make THREE available globally for window functions
+  import * as ThreeMeshUI from "./node_modules/three-mesh-ui/build/three-mesh-ui.module.min.js";
   import { home } from './home.js'
   import { site } from './site.js'
   import { VRButton } from './node_modules/three/examples/jsm/webxr/VRButton.js'
   import {networkScene} from "./scene.js";
   import {infra} from "./infra.js";
+  import { Builder } from './builder.js';
 
 
   var $rootScope = document;
@@ -45,16 +375,211 @@
 
   document.body.appendChild(VRButton.createButton(document.scene.renderer));
 
-  //init infras
-  //document.scene.addProject('projects/demo.json','Demonstration');
-  document.scene.addProject('projects/kubernetes-simple.json','K8S');
-  document.scene.addProject('projects/kubernetes-complexe.json','K8S Final');
-  //home init
-  document.home = new home({},document.scene);
-  document.scene.registerHome(document.home);
-  document.home.init();
-  document.scene.goHome();
-  //document.home.compute();
+  // --- Initialize Home with Dynamic Projects ---
+  const API_URL = 'api.php';
+
+  function initHomeWithProjects() {
+      fetch(`${API_URL}?action=list`)
+      .then(res => res.json())
+      .then(data => {
+          // Add projects from API
+          if (data.files && data.files.length > 0) {
+              data.files.forEach(file => {
+                  const name = file.replace('.json', ''); // Pretty name
+                  const path = 'projects/' + file;
+                  document.scene.addProject(path, name);
+              });
+          } else {
+              console.warn("No projects found via API.");
+          }
+
+          // Initialize Home AFTER projects are added
+          document.home = new home({}, document.scene);
+          document.scene.registerHome(document.home);
+          document.home.init();
+          document.scene.goHome();
+      })
+      .catch(err => {
+          console.error("Error loading project list:", err);
+          // Fallback init if API fails
+          document.home = new home({}, document.scene);
+          document.scene.registerHome(document.home);
+          document.home.init();
+          document.scene.goHome();
+      });
+  }
+
+  // Start init
+  initHomeWithProjects();
+
+  // --- Initialize Builder ---
+  window.builder = new Builder('builder_canvas', 'json_editor');
+
+  // --- UI Logic ---
+  
+  window.switchMode = function(mode, element) {
+      // Update Menu UI
+      if (element) {
+        document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+      }
+
+      const infraMap = document.getElementById('infra_map');
+      const editorContainer = document.getElementById('editor_container');
+
+      if (mode === 'view') {
+          infraMap.style.display = 'block';
+          editorContainer.style.display = 'none';
+      } else if (mode === 'edit') {
+          infraMap.style.display = 'none';
+          editorContainer.style.display = 'flex'; // Changed to flex for layout
+          refreshFileList();
+          // Initialize scene immediately since it's the default tab now
+          // Force animate = true when switching to edit mode
+          setTimeout(() => window.builder.init(true), 100);
+      }
+  };
+
+  window.openTab = function(tabName) {
+      // Hide all contents
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      
+      // Show selected
+      document.getElementById('tab_' + tabName).classList.add('active');
+      
+      // Update buttons
+      const buttons = document.querySelectorAll('.tab-btn');
+      if(tabName === 'visual') {
+          buttons[0].classList.add('active');
+          window.builder.init();
+      }
+      if(tabName === 'json') buttons[1].classList.add('active');
+  };
+
+  window.refreshFileList = function() {
+      fetch(`${API_URL}?action=list`)
+        .then(res => res.json())
+        .then(data => {
+            const selector = document.getElementById('file_selector');
+            const currentVal = selector.value;
+            selector.innerHTML = '<option value="" disabled>Choisir un fichier...</option>';
+            
+            data.files.forEach(file => {
+                const option = document.createElement('option');
+                option.value = file;
+                option.innerText = file;
+                selector.appendChild(option);
+            });
+
+            // Restore selection if still exists, or select default if nothing selected
+            if (currentVal && data.files.includes(currentVal)) {
+                selector.value = currentVal;
+            } else if (!currentVal && data.files.includes('kubernetes-simple.json')) {
+                selector.value = 'kubernetes-simple.json';
+                loadSelectedFile();
+            }
+        })
+        .catch(err => console.error("Error listing files:", err));
+  };
+
+  window.loadSelectedFile = function() {
+      const filename = document.getElementById('file_selector').value;
+      console.log("Load File triggered for:", filename);
+      if(!filename) return;
+
+      fetch(`${API_URL}?action=load&file=${encodeURIComponent(filename)}`)
+        .then(response => response.text())
+        .then(text => {
+            const jsonEditor = document.getElementById('json_editor');
+            try {
+                const obj = JSON.parse(text);
+                // Update editor value
+                jsonEditor.value = JSON.stringify(obj, null, 4);
+                console.log("JSON loaded and parsed");
+                
+                // If viewing (not editing), move camera if config exists
+                if(document.getElementById('infra_map').style.display !== 'none') {
+                    if (obj.camera && obj.camera.position) {
+                        // Use animateCamera for smooth transition in View mode
+                        document.scene.animateCamera(obj.camera.position, obj.camera.target || {x:0, y:0, z:0});
+                    }
+                } else {
+                    // Edit Mode
+                    // If the builder tab is active, we must update/init immediately
+                    const visualTab = document.getElementById('tab_visual');
+                    const isActive = visualTab.classList.contains('active');
+                    console.log("Edit Mode. Visual Tab Active:", isActive);
+                    
+                    if (isActive) {
+                        if (!window.builder.scene) {
+                            console.log("Initializing Builder...");
+                            window.builder.init();
+                        } else {
+                            console.log("Updating Builder from JSON...");
+                            // Force a small delay to ensure DOM update? Not usually needed but safe.
+                            // window.builder.updateFromJSON();
+                            setTimeout(() => window.builder.updateFromJSON(true), 10);
+                        }
+                    } else {
+                        // We are on JSON tab, data is updated in textarea, 
+                        // builder will update next time we click the tab.
+                        console.log("Visual Tab not active, skipping 3D update.");
+                    }
+                }
+            } catch(e) {
+                console.error("Error parsing/loading:", e);
+                jsonEditor.value = text;
+            }
+        })
+        .catch(err => console.error("Error loading file:", err));
+  };
+
+  window.saveFile = function() {
+      const filename = document.getElementById('file_selector').value;
+      const content = document.getElementById('json_editor').value;
+      
+      if(!filename) {
+          alert("Aucun fichier sélectionné !");
+          return;
+      }
+
+      // Validate JSON first
+      try {
+          JSON.parse(content);
+      } catch(e) {
+          alert("JSON invalide, impossible de sauvegarder.");
+          return;
+      }
+
+      fetch(`${API_URL}?action=save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file: filename, content: content })
+      })
+      .then(res => res.json())
+      .then(data => {
+          if(data.success) {
+              alert("Fichier sauvegardé avec succès !");
+          } else {
+              alert("Erreur lors de la sauvegarde: " + (data.error || 'Inconnue'));
+          }
+      })
+      .catch(err => alert("Erreur réseau: " + err));
+  };
+
+  window.applyJsonChanges = function(reload = false) {
+      const jsonEditor = document.getElementById('json_editor');
+      try {
+          const newConfig = JSON.parse(jsonEditor.value);
+          console.log("Applying new configuration locally:", newConfig);
+          // TODO: Implement live scene reload here if possible
+          // document.scene.reloadProject(newConfig);
+          alert("Configuration valide (Appliquée en mémoire).");
+      } catch (e) {
+          alert("Erreur JSON: " + e.message);
+      }
+  };
 </script>
 
 </body>
