@@ -1,0 +1,387 @@
+{
+    "sites": [
+        {
+            "name": "INTERNET",
+            "class": "site",
+            "style": {
+                "minWidth": 10,
+                "decal": 0,
+                "direction": "front",
+                "minDepth": 5,
+                "minHeight": 0,
+                "maxWidth": 1000,
+                "maxDepth": 1000,
+                "maxHeight": 1000,
+                "widthmargin": 1,
+                "heightmargin": 1,
+                "depthmargin": 1,
+                "widthpadding": 1,
+                "heightpadding": 1,
+                "depthpadding": 1,
+                "innermargin": 1,
+                "childPosition": "horizontal"
+            },
+            "zones": [
+                {
+                    "name": "Nouveau zone",
+                    "class": "zone",
+                    "style": {
+                        "minWidth": 5,
+                        "decal": 0,
+                        "direction": "front",
+                        "minDepth": 5,
+                        "minHeight": 0,
+                        "maxWidth": 1000,
+                        "maxDepth": 1000,
+                        "maxHeight": 1000,
+                        "widthmargin": 1,
+                        "heightmargin": 1,
+                        "depthmargin": 1,
+                        "widthpadding": 1,
+                        "heightpadding": 1,
+                        "depthpadding": 1,
+                        "innermargin": 1,
+                        "childPosition": "horizontal"
+                    },
+                    "networks": [
+                        {
+                            "name": "Nouveau network",
+                            "class": "network",
+                            "style": {
+                                "minWidth": 20,
+                                "decal": 0,
+                                "direction": "front",
+                                "minDepth": 5,
+                                "minHeight": 0,
+                                "maxWidth": 1000,
+                                "maxDepth": 1000,
+                                "maxHeight": 1000,
+                                "widthmargin": 1,
+                                "heightmargin": 1,
+                                "depthmargin": 1,
+                                "widthpadding": 1,
+                                "heightpadding": 1,
+                                "depthpadding": 1,
+                                "innermargin": 1,
+                                "childPosition": "horizontal",
+                                "color": "#ffffff"
+                            },
+                            "network": "192.168.0.0/24"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "MARSEILLE",
+            "class": "site",
+            "style": {
+                "minWidth": 5,
+                "decal": 0,
+                "direction": "front",
+                "minDepth": 5,
+                "minHeight": 0,
+                "maxWidth": 1000,
+                "maxDepth": 1000,
+                "maxHeight": 1000,
+                "widthmargin": 1,
+                "heightmargin": 1,
+                "depthmargin": 1,
+                "widthpadding": 1,
+                "heightpadding": 1,
+                "depthpadding": 1,
+                "innermargin": 1,
+                "childPosition": "horizontal"
+            },
+            "zones": [
+                {
+                    "name": "DMZ",
+                    "class": "zone",
+                    "style": {
+                        "minWidth": 5,
+                        "decal": 0,
+                        "direction": "front",
+                        "minDepth": 5,
+                        "minHeight": 0,
+                        "maxWidth": 1000,
+                        "maxDepth": 1000,
+                        "maxHeight": 1000,
+                        "widthmargin": 1,
+                        "heightmargin": 1,
+                        "depthmargin": 1,
+                        "widthpadding": 1,
+                        "heightpadding": 1,
+                        "depthpadding": 1,
+                        "innermargin": 1,
+                        "childPosition": "horizontal"
+                    },
+                    "networks": [
+                        {
+                            "name": "DMZ-WAN",
+                            "class": "network",
+                            "style": {
+                                "minWidth": 20,
+                                "decal": 0,
+                                "direction": "front",
+                                "minDepth": 5,
+                                "minHeight": 0,
+                                "maxWidth": 1000,
+                                "maxDepth": 1000,
+                                "maxHeight": 1000,
+                                "widthmargin": 1,
+                                "heightmargin": 1,
+                                "depthmargin": 1,
+                                "widthpadding": 1,
+                                "heightpadding": 1,
+                                "depthpadding": 1,
+                                "innermargin": 1,
+                                "childPosition": "horizontal",
+                                "color": "#ffffff"
+                            },
+                            "network": "192.168.0.0/24"
+                        },
+                        {
+                            "name": "DMZ-LAN",
+                            "class": "network",
+                            "style": {
+                                "minWidth": 20,
+                                "decal": 0,
+                                "direction": "front",
+                                "minDepth": 5,
+                                "minHeight": 0,
+                                "maxWidth": 1000,
+                                "maxDepth": 1000,
+                                "maxHeight": 1000,
+                                "widthmargin": 1,
+                                "heightmargin": 1,
+                                "depthmargin": 1,
+                                "widthpadding": 1,
+                                "heightpadding": 1,
+                                "depthpadding": 1,
+                                "innermargin": 1,
+                                "childPosition": "horizontal",
+                                "color": "#ffffff"
+                            },
+                            "network": "192.168.1.0/24"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "style": {
+        "minWidth": 5,
+        "decal": 0,
+        "direction": "front",
+        "minDepth": 5,
+        "minHeight": 0,
+        "maxWidth": 1000,
+        "maxDepth": 1000,
+        "maxHeight": 1000,
+        "widthmargin": 1,
+        "heightmargin": 1,
+        "depthmargin": 1,
+        "widthpadding": 1,
+        "heightpadding": 1,
+        "depthpadding": 1,
+        "innermargin": 1,
+        "childPosition": "horizontal"
+    },
+    "networkdevices": [
+        {
+            "name": "FW-01",
+            "class": "firewall",
+            "interfaces": [
+                {
+                    "name": "Nouveau interface",
+                    "class": "interface",
+                    "style": {
+                        "minWidth": 5,
+                        "decal": 0,
+                        "direction": "front",
+                        "minDepth": 5,
+                        "minHeight": 0,
+                        "maxWidth": 1000,
+                        "maxDepth": 1000,
+                        "maxHeight": 1000,
+                        "widthmargin": 1,
+                        "heightmargin": 1,
+                        "depthmargin": 1,
+                        "widthpadding": 1,
+                        "heightpadding": 1,
+                        "depthpadding": 1,
+                        "innermargin": 1,
+                        "childPosition": "horizontal",
+                        "color": "#cccccc",
+                        "visible": false
+                    },
+                    "mac": "00:00:00:00:00:00",
+                    "position": "front",
+                    "ips": [
+                        {
+                            "name": "Nouveau ip",
+                            "class": "ip",
+                            "style": {
+                                "minWidth": 5,
+                                "decal": 0,
+                                "direction": "front",
+                                "minDepth": 5,
+                                "minHeight": 0,
+                                "maxWidth": 1000,
+                                "maxDepth": 1000,
+                                "maxHeight": 1000,
+                                "widthmargin": 1,
+                                "heightmargin": 1,
+                                "depthmargin": 1,
+                                "widthpadding": 1,
+                                "heightpadding": 1,
+                                "depthpadding": 1,
+                                "innermargin": 1,
+                                "childPosition": "horizontal",
+                                "color": "#cccccc"
+                            },
+                            "ip": "192.168.0.1"
+                        }
+                    ],
+                    "net": "Nouveau network"
+                },
+                {
+                    "name": "Nouveau interface",
+                    "class": "interface",
+                    "style": {
+                        "minWidth": 5,
+                        "decal": 0.4,
+                        "direction": "front",
+                        "minDepth": 5,
+                        "minHeight": 0,
+                        "maxWidth": 1000,
+                        "maxDepth": 1000,
+                        "maxHeight": 1000,
+                        "widthmargin": 1,
+                        "heightmargin": 1,
+                        "depthmargin": 1,
+                        "widthpadding": 1,
+                        "heightpadding": 1,
+                        "depthpadding": 1,
+                        "innermargin": 1,
+                        "childPosition": "horizontal",
+                        "color": "#cccccc",
+                        "visible": true
+                    },
+                    "mac": "00:00:00:00:00:00",
+                    "net": "",
+                    "position": "front",
+                    "ips": []
+                }
+            ],
+            "style": {
+                "minWidth": 5,
+                "decal": 0,
+                "direction": "front",
+                "minDepth": 5,
+                "minHeight": 0,
+                "maxWidth": 1000,
+                "maxDepth": 1000,
+                "maxHeight": 1000,
+                "widthmargin": 1,
+                "heightmargin": 1,
+                "depthmargin": 1,
+                "widthpadding": 1,
+                "heightpadding": 1,
+                "depthpadding": 1,
+                "innermargin": 1,
+                "childPosition": "horizontal",
+                "position": {
+                    "type": "absolute",
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                }
+            }
+        }
+    ],
+    "instances": [
+        {
+            "name": "VM-01",
+            "class": "instance",
+            "cpu": 2,
+            "ram": 4096,
+            "os": "linux",
+            "storage": 50,
+            "interfaces": [
+                {
+                    "name": "Nouveau interface",
+                    "class": "interface",
+                    "style": {
+                        "minWidth": 5,
+                        "decal": 0,
+                        "direction": "front",
+                        "minDepth": 5,
+                        "minHeight": 0,
+                        "maxWidth": 1000,
+                        "maxDepth": 1000,
+                        "maxHeight": 1000,
+                        "widthmargin": 1,
+                        "heightmargin": 1,
+                        "depthmargin": 1,
+                        "widthpadding": 1,
+                        "heightpadding": 1,
+                        "depthpadding": 1,
+                        "innermargin": 1,
+                        "childPosition": "horizontal",
+                        "color": "#cccccc",
+                        "visible": true
+                    },
+                    "mac": "00:00:00:00:00:00",
+                    "position": "front",
+                    "ips": [
+                        {
+                            "name": "Nouveau ip",
+                            "class": "ip",
+                            "style": {
+                                "minWidth": 5,
+                                "decal": 0,
+                                "direction": "front",
+                                "minDepth": 5,
+                                "minHeight": 0,
+                                "maxWidth": 1000,
+                                "maxDepth": 1000,
+                                "maxHeight": 1000,
+                                "widthmargin": 1,
+                                "heightmargin": 1,
+                                "depthmargin": 1,
+                                "widthpadding": 1,
+                                "heightpadding": 1,
+                                "depthpadding": 1,
+                                "innermargin": 1,
+                                "childPosition": "horizontal",
+                                "color": "#cccccc"
+                            },
+                            "ip": "192.168.0.2"
+                        }
+                    ],
+                    "net": "DMZ-LAN"
+                }
+            ],
+            "services": [],
+            "style": {
+                "minWidth": 5,
+                "decal": 0,
+                "direction": "front",
+                "minDepth": 5,
+                "minHeight": 0,
+                "maxWidth": 1000,
+                "maxDepth": 1000,
+                "maxHeight": 1000,
+                "widthmargin": 1,
+                "heightmargin": 1,
+                "depthmargin": 1,
+                "widthpadding": 1,
+                "heightpadding": 1,
+                "depthpadding": 1,
+                "innermargin": 1,
+                "childPosition": "horizontal"
+            }
+        }
+    ]
+}

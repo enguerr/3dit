@@ -260,11 +260,11 @@
 <div id="sidebar">
     <div class="menu-item active" onclick="switchMode('view', this)">
         <div class="menu-icon"><i class="fas fa-cube"></i></div>
-        <div class="menu-text">Visualisation 3D</div>
+        <div class="menu-text">Monitoring</div>
     </div>
     <div class="menu-item" onclick="switchMode('edit', this)">
         <div class="menu-icon"><i class="fas fa-code"></i></div>
-        <div class="menu-text">Éditeur de Scène</div>
+        <div class="menu-text">Éditeur d'Infrastructure</div>
     </div>
 </div>
 
@@ -351,9 +351,9 @@
     }
     </script>
 <script type="module">
-  import * as THREE from "./node_modules/three/build/three.module.min.js";
+  import * as THREE from "three";
   window.THREE = THREE; // Make THREE available globally for window functions
-  import * as ThreeMeshUI from "./node_modules/three-mesh-ui/build/three-mesh-ui.module.min.js";
+  import * as ThreeMeshUI from "three-mesh-ui";
   import { home } from './home.js'
   import { site } from './site.js'
   import { VRButton } from './node_modules/three/examples/jsm/webxr/VRButton.js'

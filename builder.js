@@ -1,5 +1,5 @@
-import * as THREE from "./node_modules/three/build/three.module.min.js";
-import * as ThreeMeshUI from "./node_modules/three-mesh-ui/build/three-mesh-ui.module.min.js";
+import * as THREE from "three";
+import * as ThreeMeshUI from "three-mesh-ui";
 import { networkScene } from "./scene.js";
 import { infra } from "./infra.js";
 

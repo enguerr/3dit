@@ -75,7 +75,7 @@ class home extends defaultitem{
 
         container.add(
             new ThreeMeshUI.Text({
-                content: "Bonjour et bienvenue dans l'outils d'IT shaping. ",
+                content: "IT shaping - Create your own infrastructure ",
                 fontSize: 0.55
             })
         );

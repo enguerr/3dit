@@ -1,0 +1,9 @@
+services:
+  web:
+    image: php:8.2-apache
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    # Activation de mod_rewrite si besoin, et ajustement des permissions si nécessaire
+    # Pour un environnement de dev simple, l'image de base suffit souvent.
