@@ -172,6 +172,95 @@
             overflow: hidden;
         }
 
+        #builder_navigator {
+            width: 300px;
+            background-color: #252526;
+            border-left: 1px solid #3e3e42;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #navigator_content {
+            padding: 10px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .navigator-item {
+            padding: 8px;
+            margin: 2px 0;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .navigator-item:hover {
+            background-color: #2d2d2d;
+        }
+
+        .navigator-item.selected {
+            background-color: #0e639c;
+            color: white;
+        }
+
+        .navigator-item.has-children {
+            position: relative;
+        }
+
+        .navigator-children {
+            margin-left: 20px;
+            border-left: 1px solid #3e3e42;
+            padding-left: 10px;
+        }
+
+        .navigator-toggle {
+            width: 16px;
+            height: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        .navigator-delete-btn, .navigator-clone-btn {
+            margin-left: 5px;
+            padding: 2px 6px;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .navigator-delete-btn {
+            background-color: #c72525;
+        }
+
+        .navigator-delete-btn:hover {
+            background-color: #e63939;
+        }
+
+        .navigator-clone-btn {
+            background-color: #0e639c;
+        }
+
+        .navigator-clone-btn:hover {
+            background-color: #1177bb;
+        }
+
+        .navigator-item:hover .navigator-delete-btn,
+        .navigator-item:hover .navigator-clone-btn {
+            opacity: 1;
+        }
+
         #palette_library {
             padding: 10px;
             overflow-y: auto;
@@ -330,6 +419,10 @@
                     <h4 style="margin-top:0; border-bottom: 1px solid #444; padding-bottom: 5px;">Inspecteur</h4>
                     <div id="inspector_content"></div>
                 </div>
+            </div>
+            <div id="builder_navigator">
+                <h4 style="margin: 10px; border-bottom: 1px solid #444; padding-bottom: 5px;">Navigation</h4>
+                <div id="navigator_content"></div>
             </div>
         </div>
     </div>

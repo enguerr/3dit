@@ -32,6 +32,11 @@ export class Builder {
         this.selectedPath = null; // Path to selected object
         this.initialized = false;
         this.interactionInitialized = false;
+        this.selectionHighlightMesh = null; // Persistent highlight mesh for selected object
+        this.initialCameraPosition = null; // Store initial camera position
+        this.initialCameraTarget = null; // Store initial camera target
+        this.orbitalRotationTween = null; // Store orbital rotation tween
+        this.currentFocusCenter = null; // Store current focus center for orbital rotation
 
         // Bindings for UI calls (since HTML onclick needs global functions, we might need a bridge or event listeners)
         // For now, we will expose the instance globally or specific methods if needed.
@@ -52,6 +57,10 @@ export class Builder {
         // Start render loop
         this.scene.renderer.setAnimationLoop(() => {
             if(this.scene && this.scene.renderer && this.scene.scene && this.scene.camera) {
+                // Update TWEEN animations
+                if (typeof TWEEN !== 'undefined') {
+                    TWEEN.update();
+                }
                 this.scene.renderer.render(this.scene.scene, this.scene.camera);
                 ThreeMeshUI.update(); // Update UI layout
             }
@@ -226,6 +235,12 @@ export class Builder {
                 if (poi.target) targetLook.set(poi.target.x, poi.target.y, poi.target.z);
             }
 
+            // Store initial camera position and target
+            if (!this.initialized || !this.initialCameraPosition) {
+                this.initialCameraPosition = targetPos.clone();
+                this.initialCameraTarget = targetLook.clone();
+            }
+
             if (this.scene.animateCamera && (animate || !this.initialized)) {
                  // Initial distant position for effect (zoom in)
                  // We offset the current position if it's too close to target to make the animation visible
@@ -277,6 +292,19 @@ export class Builder {
             }
             
             console.log("Builder: Scene rebuilt.");
+            
+            // Restore selection highlight after scene rebuild
+            if (this.selectedConfig) {
+                const sceneItem = this.findItemInScene(this.selectedConfig);
+                if (sceneItem) {
+                    setTimeout(() => {
+                        this.highlightObjectInScene(sceneItem);
+                    }, 100);
+                }
+            }
+            
+            // Update navigator after scene rebuild (with small delay to ensure DOM is ready)
+            setTimeout(() => this.updateNavigator(), 100);
 
         } catch (e) {
             console.error("Builder Update Error:", e);
@@ -363,12 +391,13 @@ export class Builder {
         let mouseDownPos = new THREE.Vector2();
         let hoveredItem = null;
 
-        // Highlight Box
+        // Hover Highlight Box (for mouse hover, not selection)
         const highlightGeo = new THREE.BoxGeometry(1, 1, 1);
-        const highlightMat = new THREE.MeshBasicMaterial({ color: 0xffff00, opacity: 0.3, transparent: true, depthTest: false });
+        const highlightMat = new THREE.MeshBasicMaterial({ color: 0x00ff00, opacity: 0.2, transparent: true, depthTest: false });
         const highlightMesh = new THREE.Mesh(highlightGeo, highlightMat);
         highlightMesh.visible = false;
-        highlightMesh.renderOrder = 999;
+        highlightMesh.renderOrder = 998; // Lower than selection highlight
+        highlightMesh.userData.isHoverHighlight = true;
         if (this.scene && this.scene.scene) this.scene.scene.add(highlightMesh);
 
         canvas.addEventListener('pointermove', (event) => {
@@ -384,7 +413,8 @@ export class Builder {
                 if (intersects.length > 0) {
                     for (let i = 0; i < intersects.length; i++) {
                         let obj = intersects[i].object;
-                        if (obj.type === 'LineSegments' || obj.type === 'GridHelper' || obj.isUI || obj === highlightMesh) continue;
+                        if (obj.type === 'LineSegments' || obj.type === 'GridHelper' || obj.isUI || 
+                            obj === highlightMesh || (obj.userData && obj.userData.isSelectionHighlight)) continue;
                         while(obj) {
                             if (obj.item && obj.item.config) {
                                 foundObj = obj;
@@ -427,13 +457,27 @@ export class Builder {
         });
     }
 
-    selectObject(item) {
-        // console.log("Selected:", item);
-        this.selectedConfig = item.config;
+    selectObject(item, providedPath = null) {
+        // Handle both item objects (from scene) and config objects (from navigator/form)
+        let config = item.config || item;
+        let path = providedPath;
         
-        // Calculate and store path for persistence
-        if (this.data) {
-            let path = this.getPath(this.data, this.selectedConfig);
+        // If path was provided (from navigator), use it to get fresh config
+        if (path && this.data) {
+            const pathConfig = this.resolvePath(this.data, path);
+            if (pathConfig) {
+                config = pathConfig;
+                console.log("Builder: Using config from provided path", path);
+            } else {
+                path = null; // Invalid path, recalculate
+            }
+        }
+        
+        this.selectedConfig = config;
+        
+        // Calculate and store path for persistence if not provided
+        if (this.data && !path) {
+            path = this.getPath(this.data, this.selectedConfig);
             
             // Fallback: If strict equality fails (stale reference), try to find by content
             if (!path) {
@@ -444,8 +488,33 @@ export class Builder {
                     this.selectedConfig = this.resolvePath(this.data, path);
                 }
             }
-            
-            this.selectedPath = path;
+        }
+        
+        this.selectedPath = path;
+
+        // Highlight object in 3D scene
+        // Always try to find the item in scene to ensure proper highlighting
+        let sceneItem = null;
+        if (item && item.mainobj) {
+            // Item from scene click - already has 3D reference
+            console.log("Builder: selectObject - item from scene click");
+            sceneItem = item;
+        } else {
+            // Config from navigator/form - need to find item in scene
+            console.log("Builder: selectObject - finding item in scene for config", config);
+            sceneItem = this.findItemInScene(config);
+        }
+        
+        if (sceneItem) {
+            console.log("Builder: selectObject - found sceneItem, highlighting");
+            // Small delay to ensure scene is ready
+            setTimeout(() => {
+                this.highlightObjectInScene(sceneItem);
+                // Animate camera to focus on selected item
+                this.focusCameraOnItem(sceneItem);
+            }, 50);
+        } else {
+            console.warn("Builder: selectObject - sceneItem not found, cannot highlight");
         }
 
         // Update UI Visibility
@@ -453,6 +522,331 @@ export class Builder {
         document.getElementById('palette_inspector').style.display = 'block';
         
         this.renderInspector(this.selectedConfig); // Use this.selectedConfig which might be refreshed
+        this.updateNavigator(); // Update navigator to highlight selected item
+    }
+
+    highlightObjectInScene(item) {
+        // Remove previous selection highlight box
+        if (this.selectionHighlightMesh) {
+            if (this.selectionHighlightMesh.parent) {
+                this.selectionHighlightMesh.parent.remove(this.selectionHighlightMesh);
+            }
+            this.selectionHighlightMesh.geometry.dispose();
+            this.selectionHighlightMesh.material.dispose();
+            this.selectionHighlightMesh = null;
+        }
+
+        // Create new highlight box for selected object
+        if (!item) return;
+
+        // Find the main mesh to highlight
+        let targetMesh = null;
+        if (item.mainobj) {
+            if (item.getMainMesh && typeof item.getMainMesh === 'function') {
+                targetMesh = item.getMainMesh();
+            } else {
+                targetMesh = item.mainobj;
+            }
+        }
+
+        if (targetMesh && this.scene && this.scene.scene) {
+            try {
+                // Create a bounding box highlight that includes all children
+                const box = new THREE.Box3().setFromObject(targetMesh);
+                const size = new THREE.Vector3();
+                box.getSize(size);
+                const center = new THREE.Vector3();
+                box.getCenter(center);
+
+                // Only create highlight if object has valid size
+                if (size.x > 0 && size.y > 0 && size.z > 0 && 
+                    size.x < 10000 && size.y < 10000 && size.z < 10000) { // Sanity check
+                    const highlightGeo = new THREE.BoxGeometry(size.x, size.y, size.z);
+                    const highlightMat = new THREE.MeshBasicMaterial({
+                        color: 0xffff00,
+                        opacity: 0.3,
+                        transparent: true,
+                        depthTest: false,
+                        side: THREE.BackSide, // Render inside faces for better visibility
+                        wireframe: false
+                    });
+
+                    this.selectionHighlightMesh = new THREE.Mesh(highlightGeo, highlightMat);
+                    this.selectionHighlightMesh.position.copy(center);
+                    this.selectionHighlightMesh.renderOrder = 999;
+                    this.selectionHighlightMesh.userData.isSelectionHighlight = true;
+
+                    // Add to scene
+                    this.scene.scene.add(this.selectionHighlightMesh);
+                }
+            } catch (e) {
+                console.warn("Builder: Error creating highlight:", e);
+            }
+        }
+    }
+
+    focusCameraOnItem(item) {
+        if (!item || !this.scene || !this.scene.camera) {
+            console.warn("Builder: focusCameraOnItem - missing item or scene");
+            return;
+        }
+
+        try {
+            // Stop any existing camera animation and orbital rotation
+            this.stopCameraAnimations();
+
+            // Get the center point of the item
+            let centerPoint = null;
+            if (item.getWorldCenterPoint && typeof item.getWorldCenterPoint === 'function') {
+                centerPoint = item.getWorldCenterPoint();
+            } else if (item.getCenterPoint && typeof item.getCenterPoint === 'function') {
+                centerPoint = item.getCenterPoint();
+                // Convert to world coordinates if needed
+                if (item.mainobj) {
+                    item.mainobj.localToWorld(centerPoint);
+                }
+            } else if (item.mainobj) {
+                // Fallback: calculate bounding box center
+                const box = new THREE.Box3().setFromObject(item.mainobj);
+                centerPoint = new THREE.Vector3();
+                box.getCenter(centerPoint);
+            }
+
+            if (!centerPoint) {
+                console.warn("Builder: focusCameraOnItem - could not get center point");
+                return;
+            }
+
+            // Store center point for orbital rotation
+            this.currentFocusCenter = centerPoint.clone();
+
+            // Calculate camera position with offset
+            // The offset depends on the size of the object
+            let objectSize = 10; // Default size
+            if (item.mainobj) {
+                const box = new THREE.Box3().setFromObject(item.mainobj);
+                const size = new THREE.Vector3();
+                box.getSize(size);
+                // Use the largest dimension
+                objectSize = Math.max(size.x, size.y, size.z);
+            }
+
+            // Calculate distance based on object size (with some padding)
+            // Minimum distance of 15, scale with object size
+            const distance = Math.max(objectSize * 1.5, 15);
+            
+            // Calculate camera position offset
+            // Camera should always be 10 units above the ground (y=0)
+            const groundLevel = 0;
+            const cameraHeight = 10; // Always 10 units above ground
+            const offsetX = 0;
+            const offsetY = cameraHeight; // Fixed height above ground
+            const offsetZ = distance; // Behind the object
+
+            const cameraPosition = new THREE.Vector3(
+                centerPoint.x + offsetX,
+                groundLevel + offsetY, // Always 10 units above ground
+                centerPoint.z + offsetZ
+            );
+
+            // Ensure camOrigTarget exists and is initialized
+            if (!this.scene.camOrigTarget) {
+                this.scene.camOrigTarget = new THREE.Vector3(0, 0, 0);
+            }
+            
+            // Store initial target for interpolation
+            const initialTarget = this.scene.camOrigTarget.clone();
+            const finalTarget = centerPoint.clone();
+            
+            console.log("Builder: Animating camera to", cameraPosition, "focusing on", centerPoint);
+            console.log("Builder: Target interpolation from", initialTarget, "to", finalTarget);
+            
+            // Create custom animation with smooth interpolation for both position and target
+            const cam = this.scene.camera;
+            const tar = this.scene.camOrigTarget; // Direct reference to the target vector
+            
+            // Store initial position for interpolation
+            const initialPos = cam.position.clone();
+            
+            // Animation duration
+            const animationDuration = 1000; // 1 second
+            
+            // Animate camera position with smooth easing
+            const camTween = new TWEEN.Tween(cam.position)
+            .to({
+                x: cameraPosition.x,
+                y: cameraPosition.y,
+                z: cameraPosition.z
+            }, animationDuration)
+            .easing(TWEEN.Easing.Quadratic.InOut)
+            .onUpdate(function () {
+                // Make camera look at the target (which is being interpolated separately)
+                cam.lookAt(tar);
+            });
+            
+            // Animate camera target (smooth interpolation) - THIS IS THE KEY PART
+            // Animate directly on the tar vector (like scene.js does)
+            const targetTween = new TWEEN.Tween(tar)
+            .to({
+                x: finalTarget.x,
+                y: finalTarget.y,
+                z: finalTarget.z
+            }, animationDuration)
+            .easing(TWEEN.Easing.Quadratic.InOut)
+            .onUpdate(function () {
+                // Make camera look at the interpolated target
+                cam.lookAt(tar);
+            })
+            .onComplete(() => {
+                console.log("Builder: Camera animation complete, starting orbital rotation");
+                // Ensure target is at final position
+                tar.copy(finalTarget);
+                // Start orbital rotation after animation completes
+                this.startOrbitalRotation(finalTarget.clone(), distance);
+            });
+            
+            // Start both animations simultaneously
+            camTween.start();
+            targetTween.start();
+            
+            // Store tweens for cleanup
+            if (!cam.tweens) cam.tweens = [];
+            cam.tweens.push(camTween, targetTween);
+        } catch (e) {
+            console.error("Builder: Error focusing camera on item:", e);
+        }
+    }
+
+    stopCameraAnimations() {
+        if (!this.scene || !this.scene.camera) return;
+        
+        // Stop orbital rotation
+        if (this.orbitalRotationTween) {
+            this.orbitalRotationTween.stop();
+            if (typeof TWEEN !== 'undefined') {
+                TWEEN.remove(this.orbitalRotationTween);
+            }
+            this.orbitalRotationTween = null;
+        }
+        
+        // Stop camera tweens
+        if (this.scene.stopCameraAnimation) {
+            this.scene.stopCameraAnimation();
+        } else if (this.scene.camera.tweens) {
+            for (let n in this.scene.camera.tweens) {
+                if (this.scene.camera.tweens[n]) {
+                    this.scene.camera.tweens[n].stop();
+                    if (typeof TWEEN !== 'undefined') {
+                        TWEEN.remove(this.scene.camera.tweens[n]);
+                    }
+                }
+            }
+            this.scene.camera.tweens = [];
+        }
+    }
+
+    startOrbitalRotation(center, initialRadius) {
+        if (!this.scene || !this.scene.camera || !center) {
+            console.warn("Builder: Cannot start orbital rotation - missing scene, camera or center");
+            return;
+        }
+        
+        // Stop any existing orbital rotation
+        if (this.orbitalRotationTween) {
+            this.orbitalRotationTween.stop();
+            if (typeof TWEEN !== 'undefined') {
+                TWEEN.remove(this.orbitalRotationTween);
+            }
+        }
+        
+        const cam = this.scene.camera;
+        const tar = this.scene.camOrigTarget || center;
+        
+        // Calculate initial spherical coordinates from current camera position
+        const currentPos = cam.position.clone();
+        const groundLevel = 0;
+        const cameraHeight = 10; // Always 10 units above ground
+        
+        // Project camera position to horizontal plane at ground level
+        const horizontalPos = new THREE.Vector3(currentPos.x, groundLevel, currentPos.z);
+        const direction = new THREE.Vector3().subVectors(horizontalPos, new THREE.Vector3(center.x, groundLevel, center.z));
+        const currentRadius = direction.length();
+        
+        if (currentRadius < 0.1) {
+            console.warn("Builder: Camera too close to center, cannot start orbital rotation");
+            return;
+        }
+        
+        direction.normalize();
+        
+        // Calculate azimuth (horizontal angle) - elevation is fixed at 0 (horizontal plane)
+        let currentAzimuth = Math.atan2(direction.x, direction.z);
+        let currentElevation = 0; // Always horizontal (camera at fixed height)
+        
+        // Create orbital rotation animation
+        // Rotate around the center point slowly (one full rotation in 60 seconds for a movement très lent)
+        const rotationDuration = 60000; // 60 seconds for full rotation (très lent et fluide)
+        
+        const orbitalState = {
+            azimuth: currentAzimuth,
+            elevation: currentElevation,
+            radius: currentRadius
+        };
+        
+        console.log("Builder: Starting orbital rotation - azimuth:", currentAzimuth, "elevation:", currentElevation, "radius:", currentRadius);
+        
+        // Store center and target for the rotation function
+        this.orbitalCenter = center.clone();
+        this.orbitalTarget = tar;
+        this.orbitalState = orbitalState;
+        
+        // Create orbital rotation function that will be called in the animation loop
+        const updateOrbitalRotation = () => {
+            // Calculate new camera position in orbit using spherical coordinates
+            // Camera always stays at 10 units above ground (y=10)
+            const groundLevel = 0;
+            const cameraHeight = 10;
+            
+            // Calculate horizontal position in orbit
+            const x = this.orbitalCenter.x + orbitalState.radius * Math.sin(orbitalState.azimuth);
+            const y = groundLevel + cameraHeight; // Always 10 units above ground
+            const z = this.orbitalCenter.z + orbitalState.radius * Math.cos(orbitalState.azimuth);
+            
+            cam.position.set(x, y, z);
+            // Always look at the center point
+            cam.lookAt(this.orbitalTarget);
+        };
+        
+        // Function to create and start a rotation cycle
+        const createRotationCycle = () => {
+            const startAzimuth = orbitalState.azimuth;
+            const endAzimuth = startAzimuth + Math.PI * 2;
+            
+            // Stop previous tween if exists
+            if (this.orbitalRotationTween) {
+                this.orbitalRotationTween.stop();
+                if (typeof TWEEN !== 'undefined') {
+                    TWEEN.remove(this.orbitalRotationTween);
+                }
+            }
+            
+            const tween = new TWEEN.Tween(orbitalState)
+                .to({ azimuth: endAzimuth }, rotationDuration)
+                .easing(TWEEN.Easing.Linear.None) // Constant speed for smooth rotation
+                .onUpdate(updateOrbitalRotation.bind(this))
+                .onComplete(() => {
+                    // Loop: create a new cycle (infinite loop)
+                    createRotationCycle();
+                });
+            
+            this.orbitalRotationTween = tween;
+            tween.start();
+        };
+        
+        // Start the first rotation cycle
+        createRotationCycle();
+        
+        console.log("Builder: Orbital rotation started around", center, "radius:", currentRadius, "duration:", rotationDuration);
     }
 
     deselectObject() {
@@ -460,11 +854,84 @@ export class Builder {
         this.selectedPath = null;
         document.getElementById('palette_library').style.display = 'block';
         document.getElementById('palette_inspector').style.display = 'none';
+        
+        // Remove selection highlight
+        if (this.selectionHighlightMesh) {
+            if (this.selectionHighlightMesh.parent) {
+                this.selectionHighlightMesh.parent.remove(this.selectionHighlightMesh);
+            }
+            this.selectionHighlightMesh.geometry.dispose();
+            this.selectionHighlightMesh.material.dispose();
+            this.selectionHighlightMesh = null;
+        }
+        
+        // Reset camera to initial position
+        this.resetCameraToInitial();
+        
+        this.updateNavigator(); // Update navigator to remove selection highlight
+    }
+
+    resetCameraToInitial() {
+        if (!this.scene || !this.scene.camera) return;
+        
+        // Stop all camera animations
+        this.stopCameraAnimations();
+        
+        // Reset focus center
+        this.currentFocusCenter = null;
+        
+        // Reset to initial camera position if stored
+        if (this.initialCameraPosition && this.initialCameraTarget) {
+            console.log("Builder: Resetting camera to initial position");
+            if (this.scene.animateCamera) {
+                this.scene.animateCamera(this.initialCameraPosition, this.initialCameraTarget, 1000);
+            } else {
+                this.scene.camera.position.copy(this.initialCameraPosition);
+                if (this.scene.camOrigTarget) {
+                    this.scene.camOrigTarget.copy(this.initialCameraTarget);
+                }
+                this.scene.camera.lookAt(this.initialCameraTarget);
+            }
+        }
     }
 
     renderInspector(config) {
         const container = document.getElementById('inspector_content');
         container.innerHTML = '';
+
+        // Action Buttons (Clone and Delete)
+        if (config && config !== this.data) {
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.display = 'flex';
+            buttonContainer.style.gap = '10px';
+            buttonContainer.style.marginBottom = '10px';
+            
+            // Clone Button
+            const cloneBtn = document.createElement('button');
+            cloneBtn.className = 'action-btn';
+            cloneBtn.style.flex = '1';
+            cloneBtn.style.backgroundColor = '#0e639c';
+            cloneBtn.innerHTML = `<i class="fas fa-copy"></i> Cloner`;
+            cloneBtn.onclick = () => {
+                this.cloneObject(config);
+            };
+            buttonContainer.appendChild(cloneBtn);
+            
+            // Delete Button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'action-btn';
+            deleteBtn.style.flex = '1';
+            deleteBtn.style.backgroundColor = '#c72525';
+            deleteBtn.innerHTML = `<i class="fas fa-trash"></i> Supprimer`;
+            deleteBtn.onclick = () => {
+                if (confirm(`Êtes-vous sûr de vouloir supprimer "${config.name || config.ip || 'cet élément'}" ?`)) {
+                    this.deleteObject(config);
+                }
+            };
+            buttonContainer.appendChild(deleteBtn);
+            
+            container.appendChild(buttonContainer);
+        }
 
         // Parent Navigation
         if (this.data) {
@@ -949,5 +1416,481 @@ export class Builder {
         // Trigger save globally defined? Or we need to pass a save callback.
         // Assuming global saveFile() exists for now as it uses API.
         if(window.saveFile) window.saveFile();
+    }
+
+    deleteObject(config) {
+        if (!config || !this.data) return;
+        
+        // Find the object in the data structure and remove it
+        const path = this.getPath(this.data, config);
+        if (!path || path.length < 2) {
+            console.error("Builder: Cannot delete root object or object not found");
+            return;
+        }
+        
+        // Get parent and array name
+        const arrayName = path[path.length - 2];
+        const index = path[path.length - 1];
+        const parentPath = path.slice(0, -2);
+        const parent = this.resolvePath(this.data, parentPath);
+        
+        if (!parent || !parent[arrayName] || !Array.isArray(parent[arrayName])) {
+            console.error("Builder: Parent or array not found for deletion");
+            return;
+        }
+        
+        // Remove from array
+        parent[arrayName].splice(index, 1);
+        
+        // Update JSON and scene
+        const editor = document.getElementById(this.jsonEditorId);
+        editor.value = JSON.stringify(this.data, null, 4);
+        
+        // Deselect current object
+        this.deselectObject();
+        
+        // Remove selection highlight
+        if (this.selectionHighlightMesh) {
+            if (this.selectionHighlightMesh.parent) {
+                this.selectionHighlightMesh.parent.remove(this.selectionHighlightMesh);
+            }
+            this.selectionHighlightMesh.geometry.dispose();
+            this.selectionHighlightMesh.material.dispose();
+            this.selectionHighlightMesh = null;
+        }
+        
+        // Update scene
+        this.updateFromJSON();
+    }
+
+    cloneObject(config) {
+        if (!config || !this.data) return;
+        
+        // Find the object in the data structure
+        const path = this.getPath(this.data, config);
+        if (!path || path.length < 2) {
+            console.error("Builder: Cannot clone root object or object not found");
+            return;
+        }
+        
+        // Get parent and array name
+        const arrayName = path[path.length - 2];
+        const index = path[path.length - 1];
+        const parentPath = path.slice(0, -2);
+        const parent = this.resolvePath(this.data, parentPath);
+        
+        if (!parent || !parent[arrayName] || !Array.isArray(parent[arrayName])) {
+            console.error("Builder: Parent or array not found for cloning");
+            return;
+        }
+        
+        // Deep clone the object and all its children
+        const clonedObject = this.deepCloneObject(config);
+        
+        // Add " (Copie)" to the name if it exists, or create a name
+        if (clonedObject.name) {
+            clonedObject.name = clonedObject.name + " (Copie)";
+        } else if (clonedObject.class === 'ip') {
+            // For IPs, we might want to increment the IP address
+            // For now, just add a suffix
+            if (clonedObject.ip) {
+                clonedObject.ip = clonedObject.ip + "-copy";
+            }
+        }
+        
+        // Generate new UUID for the cloned object
+        clonedObject.uuid = this.generateUUID();
+        
+        // Insert clone right after the original object
+        parent[arrayName].splice(index + 1, 0, clonedObject);
+        
+        // Update JSON and scene
+        const editor = document.getElementById(this.jsonEditorId);
+        editor.value = JSON.stringify(this.data, null, 4);
+        
+        // Select the cloned object
+        const clonedPath = [...path];
+        clonedPath[clonedPath.length - 1] = index + 1; // New index
+        this.selectedPath = clonedPath;
+        this.selectedConfig = clonedObject;
+        
+        // Update scene
+        this.updateFromJSON();
+        
+        // Update UI to show the cloned object
+        setTimeout(() => {
+            this.selectObject({ config: clonedObject });
+        }, 100);
+    }
+
+    deepCloneObject(obj) {
+        if (obj === null || typeof obj !== 'object') {
+            return obj;
+        }
+        
+        // Create a deep copy
+        const cloned = JSON.parse(JSON.stringify(obj));
+        
+        // Recursively ensure all child objects have new UUIDs
+        this.regenerateUUIDs(cloned);
+        
+        return cloned;
+    }
+
+    regenerateUUIDs(node) {
+        if (!node || typeof node !== 'object') return;
+        
+        // Add UUID if it's a "class" object (our domain objects) and missing one
+        if (node.class && !node.uuid) {
+            node.uuid = this.generateUUID();
+        } else if (node.class && node.uuid) {
+            // Generate new UUID for cloned objects
+            node.uuid = this.generateUUID();
+        }
+
+        if (Array.isArray(node)) {
+            node.forEach(child => this.regenerateUUIDs(child));
+        } else {
+            Object.keys(node).forEach(key => {
+                // Avoid recursing into some properties if needed, but usually safe
+                this.regenerateUUIDs(node[key]);
+            });
+        }
+    }
+
+    updateNavigator() {
+        const container = document.getElementById('navigator_content');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        if (!this.data) {
+            container.innerHTML = '<div style="color: #888; padding: 10px;">Aucune donnée chargée</div>';
+            return;
+        }
+        
+        // Build tree structure
+        this.renderNavigatorTree(this.data, container, 0);
+        
+        // Expand path to selected item if one is selected
+        if (this.selectedPath && this.selectedPath.length > 0) {
+            this.expandPathInNavigator(this.selectedPath);
+        }
+    }
+
+    expandPathInNavigator(path) {
+        // Find all parent items and expand them
+        const container = document.getElementById('navigator_content');
+        if (!container) return;
+        
+        const items = container.querySelectorAll('.navigator-item');
+        let currentPath = [];
+        
+        // Build path step by step and expand each level
+        for (let i = 0; i < path.length - 1; i += 2) {
+            if (i + 1 < path.length) {
+                currentPath.push(path[i], path[i + 1]);
+                
+                // Find the item at this path
+                items.forEach((itemDiv) => {
+                    const itemPath = itemDiv.dataset.path;
+                    if (itemPath) {
+                        const itemPathArray = JSON.parse(itemPath);
+                        if (this.pathsEqual(itemPathArray, currentPath)) {
+                            // Expand this item
+                            const toggleBtn = itemDiv.querySelector('.navigator-toggle');
+                            const childrenDiv = itemDiv.nextElementSibling;
+                            if (toggleBtn && childrenDiv && childrenDiv.classList.contains('navigator-children')) {
+                                if (childrenDiv.style.display === 'none') {
+                                    childrenDiv.style.display = 'block';
+                                    toggleBtn.style.transform = 'rotate(90deg)';
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    renderNavigatorTree(obj, container, level = 0, path = []) {
+        if (!obj || typeof obj !== 'object') return;
+        
+        // Arrays to process: sites, zones, networks, instances, networkdevices, interfaces, ips, services
+        const arrayKeys = ['sites', 'zones', 'networks', 'instances', 'networkdevices', 'interfaces', 'ips', 'services'];
+        
+        for (const key of arrayKeys) {
+            if (obj[key] && Array.isArray(obj[key])) {
+                obj[key].forEach((item, index) => {
+                    if (item && typeof item === 'object' && item.class) {
+                        const itemPath = [...path, key, index];
+                        this.renderNavigatorItem(item, container, level, itemPath);
+                    }
+                });
+            }
+        }
+    }
+
+    renderNavigatorItem(item, container, level, path) {
+        if (!item || !item.class) return;
+        
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'navigator-item';
+        itemDiv.style.paddingLeft = `${10 + level * 20}px`;
+        itemDiv.dataset.path = JSON.stringify(path); // Store path for expansion
+        
+        // Check if selected
+        const isSelected = this.selectedConfig && 
+                         ((this.selectedConfig.uuid && item.uuid && this.selectedConfig.uuid === item.uuid) ||
+                          (this.selectedPath && this.pathsEqual(this.selectedPath, path)));
+        
+        if (isSelected) {
+            itemDiv.classList.add('selected');
+            // Scroll into view
+            setTimeout(() => {
+                itemDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+        
+        // Get icon and label
+        const iconMap = {
+            'site': 'building',
+            'zone': 'vector-square',
+            'network': 'network-wired',
+            'instance': 'server',
+            'firewall': 'shield-alt',
+            'interface': 'ethernet',
+            'ip': 'map-marker-alt',
+            'service': 'cogs'
+        };
+        
+        const icon = iconMap[item.class] || 'cube';
+        const label = item.name || item.ip || `${item.class} ${path[path.length - 1]}`;
+        
+        // Check if has children
+        const hasChildren = this.hasNavigableChildren(item);
+        
+        // Toggle button for expandable items
+        let toggleBtn = null;
+        if (hasChildren) {
+            itemDiv.classList.add('has-children');
+            toggleBtn = document.createElement('span');
+            toggleBtn.className = 'navigator-toggle';
+            toggleBtn.innerHTML = '▶';
+            toggleBtn.style.transform = 'rotate(0deg)';
+            toggleBtn.onclick = (e) => {
+                e.stopPropagation();
+                const childrenDiv = itemDiv.nextElementSibling;
+                if (childrenDiv && childrenDiv.classList.contains('navigator-children')) {
+                    const isExpanded = childrenDiv.style.display !== 'none';
+                    childrenDiv.style.display = isExpanded ? 'none' : 'block';
+                    toggleBtn.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(90deg)';
+                }
+            };
+            itemDiv.appendChild(toggleBtn);
+        } else {
+            const spacer = document.createElement('span');
+            spacer.className = 'navigator-toggle';
+            spacer.style.width = '16px';
+            itemDiv.appendChild(spacer);
+        }
+        
+        // Icon and label
+        const iconSpan = document.createElement('i');
+        iconSpan.className = `fas fa-${icon}`;
+        itemDiv.appendChild(iconSpan);
+        
+        const labelSpan = document.createElement('span');
+        labelSpan.textContent = label;
+        itemDiv.appendChild(labelSpan);
+        
+        // Action buttons (Clone and Delete) - declare outside if to make them accessible in handleClick
+        let cloneBtn = null;
+        let deleteBtn = null;
+        if (item !== this.data) {
+            // Clone button
+            cloneBtn = document.createElement('button');
+            cloneBtn.className = 'navigator-clone-btn';
+            cloneBtn.innerHTML = '<i class="fas fa-copy"></i>';
+            cloneBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.cloneObject(item);
+            };
+            itemDiv.appendChild(cloneBtn);
+            
+            // Delete button
+            deleteBtn = document.createElement('button');
+            deleteBtn.className = 'navigator-delete-btn';
+            deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (confirm(`Êtes-vous sûr de vouloir supprimer "${label}" ?`)) {
+                    this.deleteObject(item);
+                }
+            };
+            itemDiv.appendChild(deleteBtn);
+        }
+        
+        // Click handler for selection - use event delegation on the itemDiv
+        itemDiv.style.cursor = 'pointer';
+        itemDiv.style.userSelect = 'none'; // Prevent text selection
+        
+        // Store path and item reference on the element for easy access
+        itemDiv.dataset.itemPath = JSON.stringify(path);
+        itemDiv.dataset.itemLabel = label;
+        
+        // Create a bound function to handle the click
+        const handleClick = (e) => {
+            console.log("Navigator: Click event triggered on", label);
+            
+            // Check if click is on toggle or delete button
+            const clickedElement = e.target;
+            
+            // Check if clicking on toggle button or its children
+            if (toggleBtn) {
+                if (clickedElement === toggleBtn || 
+                    (clickedElement.closest && clickedElement.closest('.navigator-toggle') === toggleBtn) ||
+                    (toggleBtn.contains && toggleBtn.contains(clickedElement))) {
+                    console.log("Navigator: Click on toggle button, ignoring");
+                    return; // Let toggle button handle it
+                }
+            }
+            
+            // Check if clicking on clone button or its children
+            if (cloneBtn) {
+                if (clickedElement === cloneBtn || 
+                    (clickedElement.closest && clickedElement.closest('.navigator-clone-btn') === cloneBtn) ||
+                    (cloneBtn.contains && cloneBtn.contains(clickedElement))) {
+                    console.log("Navigator: Click on clone button, ignoring");
+                    return; // Let clone button handle it
+                }
+            }
+            
+            // Check if clicking on delete button or its children
+            if (deleteBtn) {
+                if (clickedElement === deleteBtn || 
+                    (clickedElement.closest && clickedElement.closest('.navigator-delete-btn') === deleteBtn) ||
+                    (deleteBtn.contains && deleteBtn.contains(clickedElement))) {
+                    console.log("Navigator: Click on delete button, ignoring");
+                    return; // Let delete button handle it
+                }
+            }
+            
+            // Otherwise, select the item
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log("Navigator: Click detected on", label, "path:", path);
+            
+            // Get fresh item from data using path
+            let storedPath;
+            try {
+                storedPath = JSON.parse(itemDiv.dataset.itemPath);
+            } catch (e) {
+                storedPath = path;
+            }
+            
+            const freshItem = this.resolvePath(this.data, storedPath);
+            
+            if (freshItem) {
+                console.log("Navigator: Selecting item from path", storedPath, freshItem);
+                // Pass the path directly to selectObject
+                this.selectObject({ config: freshItem }, storedPath);
+            } else {
+                console.warn("Navigator: Could not resolve item from path, using fallback");
+                // Fallback to the item we have
+                this.selectObject({ config: item });
+            }
+        };
+        
+        // Add click listener with proper event handling
+        itemDiv.addEventListener('click', handleClick, true); // Use capture phase
+        
+        container.appendChild(itemDiv);
+        
+        // Render children if item has navigable children
+        if (hasChildren) {
+            const childrenDiv = document.createElement('div');
+            childrenDiv.className = 'navigator-children';
+            childrenDiv.style.display = 'none';
+            container.appendChild(childrenDiv);
+            this.renderNavigatorTree(item, childrenDiv, level + 1, path);
+        }
+    }
+
+    hasNavigableChildren(item) {
+        if (!item || typeof item !== 'object') return false;
+        const childArrays = ['zones', 'networks', 'interfaces', 'ips', 'services'];
+        return childArrays.some(key => item[key] && Array.isArray(item[key]) && item[key].length > 0);
+    }
+
+    pathsEqual(path1, path2) {
+        if (!path1 || !path2 || path1.length !== path2.length) return false;
+        for (let i = 0; i < path1.length; i++) {
+            if (path1[i] !== path2[i]) return false;
+        }
+        return true;
+    }
+
+    findItemInScene(config) {
+        if (!this.scene || !this.scene.children) {
+            console.warn("Builder: findItemInScene - scene or children not available");
+            return null;
+        }
+        
+        if (!config) {
+            console.warn("Builder: findItemInScene - config is null");
+            return null;
+        }
+        
+        console.log("Builder: findItemInScene - searching for", config.name || config.ip, "UUID:", config.uuid);
+        
+        const findInChildren = (children) => {
+            if (!children || !Array.isArray(children)) return null;
+            
+            for (const child of children) {
+                if (!child) continue;
+                
+                // Check if this is the item we're looking for
+                if (child.config) {
+                    // Direct reference match (most reliable)
+                    if (child.config === config) {
+                        console.log("Builder: findItemInScene - found by direct reference");
+                        return child;
+                    }
+                    
+                    // UUID match (very reliable)
+                    if (child.config.uuid && config.uuid && child.config.uuid === config.uuid) {
+                        console.log("Builder: findItemInScene - found by UUID match", config.uuid);
+                        return child;
+                    }
+                    
+                    // Name/IP match for fallback (less reliable but useful)
+                    if (config.class && child.config.class === config.class) {
+                        if (config.name && child.config.name === config.name) {
+                            console.log("Builder: findItemInScene - found by name match", config.name);
+                            return child;
+                        }
+                        if (config.ip && child.config.ip === config.ip) {
+                            console.log("Builder: findItemInScene - found by IP match", config.ip);
+                            return child;
+                        }
+                    }
+                }
+                
+                // Recursively search children
+                if (child.children && Array.isArray(child.children) && child.children.length > 0) {
+                    const found = findInChildren(child.children);
+                    if (found) return found;
+                }
+            }
+            return null;
+        };
+        
+        const result = findInChildren(this.scene.children);
+        if (!result) {
+            console.warn("Builder: findItemInScene - item not found in scene", config);
+        }
+        return result;
     }
 }
