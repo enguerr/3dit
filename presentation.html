@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>3dit - Présentation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #111;
+            color: #ddd;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #pres_header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 36px;
+            background: rgba(30,30,30,0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        #pres_title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ccc;
+        }
+        #pres_controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        #pres_controls button {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #aaa;
+            padding: 4px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        #pres_controls button:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.15);
+        }
+
+        #pres_breadcrumb {
+            position: fixed;
+            top: 36px; left: 0; right: 0;
+            height: 22px;
+            background: rgba(20,20,20,0.7);
+            backdrop-filter: blur(6px);
+            padding: 0 16px;
+            font-size: 11px;
+            color: #888;
+            display: none;
+            align-items: center;
+            gap: 4px;
+            z-index: 99;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        #pres_breadcrumb .bc-item {
+            cursor: pointer;
+            color: #6db3f2;
+            padding: 1px 4px;
+            border-radius: 2px;
+        }
+        #pres_breadcrumb .bc-item:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.1);
+        }
+        #pres_breadcrumb .bc-sep { color: #444; margin: 0 2px; }
+        #pres_breadcrumb .bc-current { color: #fff; font-weight: 600; }
+
+        #pres_tree {
+            position: fixed;
+            top: 36px;
+            right: 0;
+            width: 280px;
+            bottom: 0;
+            background: rgba(30,30,30,0.85);
+            backdrop-filter: blur(8px);
+            overflow-y: auto;
+            padding: 10px;
+            font-size: 12px;
+            z-index: 98;
+            border-left: 1px solid rgba(255,255,255,0.06);
+            display: none;
+        }
+        #pres_tree .tree-node {
+            padding: 3px 0 3px 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            color: #bbb;
+            border-radius: 3px;
+        }
+        #pres_tree .tree-node:hover {
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+        }
+        #pres_tree .tree-node.selected {
+            background: #264f78;
+            color: #fff;
+        }
+        #pres_tree .tree-children {
+            padding-left: 10px;
+            border-left: 1px solid #333;
+            margin-left: 6px;
+        }
+        #pres_tree .tree-toggle {
+            display: inline-block;
+            width: 12px;
+            cursor: pointer;
+            color: #666;
+            font-size: 10px;
+        }
+
+        #pres_canvas {
+            position: fixed;
+            top: 36px; left: 0; right: 0; bottom: 0;
+        }
+        #pres_canvas canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        #pres_loading {
+            position: fixed;
+            inset: 0;
+            background: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            color: #888;
+            font-size: 16px;
+        }
+
+        .view-toggle-btn {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #aaa;
+            padding: 4px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        .view-toggle-btn:hover { color: #fff; background: rgba(255,255,255,0.15); }
+        .view-toggle-btn.active { background: #0e639c; color: white; border-color: #0e639c; }
+    </style>
+    <script src="/lib/libs/tween.min.js"></script>
+</head>
+<body>
+
+<div id="pres_loading">
+    <div style="text-align:center;">
+        <i class="fas fa-spinner fa-spin" style="font-size:32px;margin-bottom:16px;display:block;color:#0e639c;"></i>
+        Chargement de la présentation...
+    </div>
+</div>
+
+<div id="pres_header">
+    <div id="pres_title">Chargement...</div>
+    <div id="pres_controls">
+        <button class="view-toggle-btn active" id="btn_pres_logical" onclick="switchPresView('logical')">
+            <i class="fas fa-project-diagram"></i> Logique
+        </button>
+        <button class="view-toggle-btn" id="btn_pres_physical" onclick="switchPresView('physical')">
+            <i class="fas fa-warehouse"></i> Physique
+        </button>
+        <button onclick="toggleTree()"><i class="fas fa-sitemap"></i> Arborescence</button>
+        <button onclick="presResetCamera()"><i class="fas fa-video"></i> Reset</button>
+    </div>
+</div>
+
+<div id="pres_breadcrumb"></div>
+<div id="pres_tree"></div>
+<div id="pres_canvas"></div>
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "/node_modules/three/build/three.module.min.js",
+            "three-mesh-ui": "/node_modules/three-mesh-ui/build/three-mesh-ui.module.min.js"
+        }
+    }
+</script>
+<script type="module">
+    import * as THREE from "three";
+    window.THREE = THREE;
+    import * as ThreeMeshUI from "three-mesh-ui";
+    import { networkScene } from "/scene.js";
+    import { infra } from "/infra.js";
+
+    const presId = window.location.pathname.split('/p/')[1];
+    if (!presId) {
+        document.getElementById('pres_loading').innerHTML = '<p>Presentation ID missing</p>';
+        throw new Error('No presentation ID');
+    }
+
+    let scene, infraObj, currentView = 'logical';
+
+    async function loadPresentation() {
+        const resp = await fetch(`/api/presentations/${presId}`);
+        if (!resp.ok) {
+            document.getElementById('pres_loading').innerHTML = '<p>Présentation introuvable</p>';
+            return;
+        }
+        const data = await resp.json();
+        const config = typeof data.Json === 'string' ? JSON.parse(data.Json) : data.Json;
+
+        document.getElementById('pres_title').textContent = data.Titre || 'Présentation';
+        document.title = '3dit - ' + (data.Titre || 'Présentation');
+
+        scene = new networkScene('pres_canvas', document, {}, '');
+
+        infraObj = new infra(config, scene);
+        infraObj.init(false, 'logical');
+        scene.add(infraObj);
+        scene.resetCamera();
+
+        document.getElementById('pres_loading').style.display = 'none';
+
+        buildTree(config);
+    }
+
+    function buildTree(config) {
+        const treeEl = document.getElementById('pres_tree');
+        let html = '<div style="color:#e8a840;font-weight:bold;margin-bottom:6px;"><i class="fas fa-project-diagram" style="margin-right:4px;"></i> Vue Logique</div>';
+
+        function renderNode(item, depth) {
+            const icon = getIcon(item.class);
+            const hasChildren = hasChildArrays(item);
+            let h = `<div class="tree-node" data-name="${item.name || ''}" data-class="${item.class || ''}" style="padding-left:${depth * 12}px;">`;
+            if (hasChildren) h += '<span class="tree-toggle">&#9654;</span>';
+            else h += '<span style="display:inline-block;width:12px;"></span>';
+            h += `<i class="${icon}" style="width:14px;text-align:center;margin-right:4px;font-size:10px;"></i>`;
+            h += `${item.name || item.class || '?'}</div>`;
+            if (hasChildren) {
+                h += '<div class="tree-children">';
+                for (const key of ['sites','zones','networks','instances','networkdevices','rows','racks','equipment','datacenters']) {
+                    if (item[key] && item[key].length > 0) {
+                        for (const child of item[key]) {
+                            h += renderNode(child, depth + 1);
+                        }
+                    }
+                }
+                h += '</div>';
+            }
+            return h;
+        }
+
+        if (config.sites) config.sites.forEach(s => { html += renderNode(s, 0); });
+        if (config.networkdevices) config.networkdevices.forEach(s => { html += renderNode(s, 0); });
+        if (config.instances) config.instances.forEach(s => { html += renderNode(s, 0); });
+
+        if (config.datacenters && config.datacenters.length > 0) {
+            html += '<div style="color:#e8a840;font-weight:bold;margin:8px 0 4px 0;"><i class="fas fa-warehouse" style="margin-right:4px;"></i> Vue Physique</div>';
+            config.datacenters.forEach(dc => { html += renderNode(dc, 0); });
+        }
+
+        treeEl.innerHTML = html;
+
+        treeEl.querySelectorAll('.tree-toggle').forEach(toggle => {
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const childrenDiv = toggle.parentElement.nextElementSibling;
+                if (childrenDiv && childrenDiv.classList.contains('tree-children')) {
+                    const visible = childrenDiv.style.display !== 'none';
+                    childrenDiv.style.display = visible ? 'none' : 'block';
+                    toggle.innerHTML = visible ? '&#9654;' : '&#9660;';
+                }
+            });
+        });
+    }
+
+    function getIcon(cls) {
+        const map = {
+            'site': 'fas fa-building', 'zone': 'fas fa-vector-square',
+            'network': 'fas fa-network-wired', 'instance': 'fas fa-server',
+            'firewall': 'fas fa-shield-alt', 'datacenter': 'fas fa-warehouse',
+            'row': 'fas fa-grip-lines', 'rack': 'fas fa-th-large',
+            'physicalserver': 'fas fa-hdd', 'physicalswitch': 'fas fa-exchange-alt'
+        };
+        return map[cls] || 'fas fa-cube';
+    }
+
+    function hasChildArrays(item) {
+        for (const key of ['sites','zones','networks','instances','networkdevices','rows','racks','equipment','datacenters']) {
+            if (item[key] && item[key].length > 0) return true;
+        }
+        return false;
+    }
+
+    window.switchPresView = async function(view) {
+        currentView = view;
+        document.getElementById('btn_pres_logical').classList.toggle('active', view === 'logical');
+        document.getElementById('btn_pres_physical').classList.toggle('active', view === 'physical');
+
+        if (!infraObj) return;
+
+        const isPhysical = view === 'physical';
+        if (isPhysical) {
+            await infraObj.ensurePhysical();
+            if (infraObj.container) infraObj.container.removeFromParent();
+            if (infraObj.physicalContainer) infraObj.mainobj.add(infraObj.physicalContainer);
+        } else {
+            if (infraObj.physicalContainer) infraObj.physicalContainer.removeFromParent();
+            if (infraObj.container) infraObj.mainobj.add(infraObj.container);
+        }
+        if (scene && scene.connectorContainer) {
+            scene.connectorContainer.visible = !isPhysical;
+        }
+        if (scene) scene.resetCamera();
+    };
+
+    window.toggleTree = function() {
+        const el = document.getElementById('pres_tree');
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    };
+
+    window.presResetCamera = function() {
+        if (scene) scene.resetCamera();
+    };
+
+    loadPresentation();
+</script>
+</body>
+</html>
