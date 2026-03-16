@@ -66,11 +66,38 @@
                                 "childPosition": "horizontal",
                                 "color": "#ffffff"
                             },
-                            "network": "192.168.0.0/24"
+                            "network": "192.168.0.0/24",
+                            "uuid": "66a6d6a3-6640-4686-9fc2-7f62f53d4fd1"
                         }
-                    ]
+                    ],
+                    "uuid": "1cb27d58-9ebe-4b0d-8bd0-643ee32c42c3"
+                },
+                {
+                    "name": "New Zone",
+                    "class": "zone",
+                    "style": {
+                        "minWidth": 5,
+                        "decal": 0,
+                        "direction": "front",
+                        "minDepth": 5,
+                        "minHeight": 0,
+                        "maxWidth": 1000,
+                        "maxDepth": 1000,
+                        "maxHeight": 1000,
+                        "widthmargin": 1,
+                        "heightmargin": 1,
+                        "depthmargin": 1,
+                        "widthpadding": 1,
+                        "heightpadding": 1,
+                        "depthpadding": 1,
+                        "innermargin": 1,
+                        "childPosition": "horizontal"
+                    },
+                    "networks": [],
+                    "uuid": "52e1070a-809a-4e57-8f0c-a8ce04b775c8"
                 }
-            ]
+            ],
+            "uuid": "2e0ed44d-19a1-4914-9090-e4cc19d2932b"
         },
         {
             "name": "MARSEILLE",
@@ -138,7 +165,8 @@
                                 "childPosition": "horizontal",
                                 "color": "#ffffff"
                             },
-                            "network": "192.168.0.0/24"
+                            "network": "192.168.0.0/24",
+                            "uuid": "916b072d-ae41-49f3-a370-e0969e9fc0ef"
                         },
                         {
                             "name": "DMZ-LAN",
@@ -162,11 +190,14 @@
                                 "childPosition": "horizontal",
                                 "color": "#ffffff"
                             },
-                            "network": "192.168.1.0/24"
+                            "network": "192.168.1.0/24",
+                            "uuid": "cb80ce88-7511-43f5-b458-c2af6ebfa073"
                         }
-                    ]
+                    ],
+                    "uuid": "dc232014-dd74-4f41-bfba-142c28ea4b8e"
                 }
-            ]
+            ],
+            "uuid": "d5e16e4a-ac74-4858-915c-848d67f7c5db"
         }
     ],
     "style": {
@@ -193,7 +224,7 @@
             "class": "firewall",
             "interfaces": [
                 {
-                    "name": "Nouveau interface",
+                    "name": "wan",
                     "class": "interface",
                     "style": {
                         "minWidth": 5,
@@ -213,7 +244,7 @@
                         "innermargin": 1,
                         "childPosition": "horizontal",
                         "color": "#cccccc",
-                        "visible": false
+                        "visible": true
                     },
                     "mac": "00:00:00:00:00:00",
                     "position": "front",
@@ -238,15 +269,17 @@
                                 "depthpadding": 1,
                                 "innermargin": 1,
                                 "childPosition": "horizontal",
-                                "color": "#cccccc"
+                                "color": "#FF0000"
                             },
-                            "ip": "192.168.0.1"
+                            "ip": "192.168.0.1",
+                            "uuid": "9626a2ed-ba2a-4387-8bb4-a689e28396fe"
                         }
                     ],
-                    "net": "Nouveau network"
+                    "net": "66a6d6a3-6640-4686-9fc2-7f62f53d4fd1",
+                    "uuid": "c707388a-2a48-42ef-9cda-800214651c4c"
                 },
                 {
-                    "name": "Nouveau interface",
+                    "name": "lan",
                     "class": "interface",
                     "style": {
                         "minWidth": 5,
@@ -266,12 +299,94 @@
                         "innermargin": 1,
                         "childPosition": "horizontal",
                         "color": "#cccccc",
-                        "visible": true
+                        "visible": false
                     },
                     "mac": "00:00:00:00:00:00",
-                    "net": "",
+                    "net": "916b072d-ae41-49f3-a370-e0969e9fc0ef",
                     "position": "front",
-                    "ips": []
+                    "ips": [
+                        {
+                            "name": "Nouveau ip",
+                            "class": "ip",
+                            "style": {
+                                "minWidth": 5,
+                                "decal": 0,
+                                "direction": "front",
+                                "minDepth": 5,
+                                "minHeight": 0,
+                                "maxWidth": 1000,
+                                "maxDepth": 1000,
+                                "maxHeight": 1000,
+                                "widthmargin": 1,
+                                "heightmargin": 1,
+                                "depthmargin": 1,
+                                "widthpadding": 1,
+                                "heightpadding": 1,
+                                "depthpadding": 1,
+                                "innermargin": 1,
+                                "childPosition": "horizontal",
+                                "color": "#cccccc"
+                            },
+                            "ip": "127.0.0.1",
+                            "uuid": "8a69e730-f62c-4c91-9ab4-606c16f04aa2"
+                        }
+                    ],
+                    "uuid": "caf0d41a-9da8-44ea-b0db-d6ecb6d0897c"
+                },
+                {
+                    "name": "Nouveau interface",
+                    "class": "interface",
+                    "style": {
+                        "minWidth": 5,
+                        "decal": 0.8,
+                        "direction": "front",
+                        "minDepth": 5,
+                        "minHeight": 0,
+                        "maxWidth": 1000,
+                        "maxDepth": 1000,
+                        "maxHeight": 1000,
+                        "widthmargin": 1,
+                        "heightmargin": 1,
+                        "depthmargin": 1,
+                        "widthpadding": 1,
+                        "heightpadding": 1,
+                        "depthpadding": 1,
+                        "innermargin": 1,
+                        "childPosition": "horizontal",
+                        "color": "#cccccc",
+                        "visible": false
+                    },
+                    "mac": "00:00:00:00:00:00",
+                    "net": "cb80ce88-7511-43f5-b458-c2af6ebfa073",
+                    "position": "front",
+                    "ips": [
+                        {
+                            "name": "Nouveau ip",
+                            "class": "ip",
+                            "style": {
+                                "minWidth": 5,
+                                "decal": 0,
+                                "direction": "front",
+                                "minDepth": 5,
+                                "minHeight": 0,
+                                "maxWidth": 1000,
+                                "maxDepth": 1000,
+                                "maxHeight": 1000,
+                                "widthmargin": 1,
+                                "heightmargin": 1,
+                                "depthmargin": 1,
+                                "widthpadding": 1,
+                                "heightpadding": 1,
+                                "depthpadding": 1,
+                                "innermargin": 1,
+                                "childPosition": "horizontal",
+                                "color": "#cccccc"
+                            },
+                            "ip": "127.0.0.1",
+                            "uuid": "cf4720c9-e0d8-4bc1-9a82-23f6eb90c5cf"
+                        }
+                    ],
+                    "uuid": "fe75a982-4eb1-4318-bdc2-eda9a542cb98"
                 }
             ],
             "style": {
@@ -297,7 +412,8 @@
                     "y": 0,
                     "z": 0
                 }
-            }
+            },
+            "uuid": "c321ed64-d242-44cd-82c6-391224f2961c"
         }
     ],
     "instances": [
@@ -357,13 +473,101 @@
                                 "childPosition": "horizontal",
                                 "color": "#cccccc"
                             },
-                            "ip": "192.168.0.2"
+                            "ip": "192.168.0.2",
+                            "uuid": "492ce6b6-70f6-40e3-9156-4abcdd249014"
                         }
                     ],
-                    "net": "DMZ-LAN"
+                    "net": "916b072d-ae41-49f3-a370-e0969e9fc0ef",
+                    "uuid": "bc11fd8e-de79-4623-a467-daa369dc28be"
                 }
             ],
             "services": [],
+            "style": {
+                "minWidth": 5,
+                "decal": 0,
+                "direction": "front",
+                "minDepth": 5,
+                "minHeight": 0,
+                "maxWidth": 1000,
+                "maxDepth": 1000,
+                "maxHeight": 1000,
+                "widthmargin": 1,
+                "heightmargin": 1,
+                "depthmargin": 1,
+                "widthpadding": 1,
+                "heightpadding": 1,
+                "depthpadding": 1,
+                "innermargin": 1,
+                "childPosition": "horizontal"
+            },
+            "uuid": "4f68f76b-93a4-473a-af5c-6ebb853032e6"
+        },
+        {
+            "name": "VM-02",
+            "class": "instance",
+            "cpu": 2,
+            "ram": 4096,
+            "os": "linux",
+            "storage": 50,
+            "interfaces": [
+                {
+                    "name": "Nouveau interface",
+                    "class": "interface",
+                    "style": {
+                        "minWidth": 5,
+                        "decal": 0,
+                        "direction": "front",
+                        "minDepth": 5,
+                        "minHeight": 0,
+                        "maxWidth": 1000,
+                        "maxDepth": 1000,
+                        "maxHeight": 1000,
+                        "widthmargin": 1,
+                        "heightmargin": 1,
+                        "depthmargin": 1,
+                        "widthpadding": 1,
+                        "heightpadding": 1,
+                        "depthpadding": 1,
+                        "innermargin": 1,
+                        "childPosition": "horizontal",
+                        "color": "#cccccc",
+                        "visible": true
+                    },
+                    "mac": "00:00:00:00:00:00",
+                    "net": "cb80ce88-7511-43f5-b458-c2af6ebfa073",
+                    "position": "front",
+                    "ips": [
+                        {
+                            "name": "Nouveau ip",
+                            "class": "ip",
+                            "style": {
+                                "minWidth": 5,
+                                "decal": 0,
+                                "direction": "front",
+                                "minDepth": 5,
+                                "minHeight": 0,
+                                "maxWidth": 1000,
+                                "maxDepth": 1000,
+                                "maxHeight": 1000,
+                                "widthmargin": 1,
+                                "heightmargin": 1,
+                                "depthmargin": 1,
+                                "widthpadding": 1,
+                                "heightpadding": 1,
+                                "depthpadding": 1,
+                                "innermargin": 1,
+                                "childPosition": "horizontal",
+                                "color": "#cccccc"
+                            },
+                            "ip": "127.0.0.1",
+                            "uuid": "ed569c0b-f3fc-4691-99d7-31e9f5b2f7c2"
+                        }
+                    ],
+                    "uuid": "82ecffd3-5349-4f9c-b6d1-7624f920c5af"
+                }
+            ],
+            "services": [],
+            "uuid": "c335ab46-a846-4199-8847-fdc5368390bf",
             "style": {
                 "minWidth": 5,
                 "decal": 0,

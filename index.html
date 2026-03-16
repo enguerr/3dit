@@ -1,7 +1,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Network Supervision</title>
+    <title>3dit - Infrastructure Editor</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
@@ -10,75 +10,15 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        /* Sidebar Menu */
-        #sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 60px;
-            background-color: #2c3e50;
-            color: white;
-            transition: width 0.3s ease;
-            z-index: 1000;
-            overflow: hidden;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
-        }
-
-        #sidebar:hover {
-            width: 250px;
-        }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            padding: 20px 0;
-            cursor: pointer;
-            transition: background 0.2s;
-            white-space: nowrap;
-        }
-
-        .menu-item:hover, .menu-item.active {
-            background-color: #34495e;
-            border-left: 4px solid #3498db;
-        }
-
-        .menu-icon {
-            width: 60px;
-            text-align: center;
-            font-size: 1.5rem;
-            flex-shrink: 0;
-        }
-
-        .menu-text {
-            opacity: 0;
-            transition: opacity 0.2s;
-            margin-left: 10px;
-            font-weight: 500;
-        }
-
-        #sidebar:hover .menu-text {
-            opacity: 1;
-        }
-
         #editor_container {
-            display: none;
             position: absolute;
             top: 0;
-            left: 60px; /* Width of collapsed sidebar */
+            left: 0;
             right: 0;
             bottom: 0;
             background-color: #1e1e1e;
             color: #d4d4d4;
-            padding: 0; /* Remove padding to handle layout manually */
+            padding: 0;
             z-index: 900;
             box-sizing: border-box;
             display: flex;
@@ -95,7 +35,31 @@
             border-bottom: 1px solid #3e3e42;
         }
 
-        /* Tabs Styles */
+        #user_info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #aaa;
+            font-size: 13px;
+        }
+        #user_info .user-name {
+            color: #ccc;
+            font-weight: 500;
+        }
+        #user_info .logout-btn {
+            background: none;
+            border: 1px solid #555;
+            color: #aaa;
+            padding: 3px 8px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        #user_info .logout-btn:hover {
+            color: #fff;
+            border-color: #888;
+        }
+
         .editor-tabs {
             display: flex;
             background-color: #252526;
@@ -124,7 +88,6 @@
             border-top: 2px solid #007acc;
         }
 
-        /* Tab Content Areas */
         .tab-content {
             flex-grow: 1;
             display: none;
@@ -150,7 +113,6 @@
             box-sizing: border-box;
         }
 
-        /* Visual Builder Layout */
         #builder_layout {
             display: flex;
             width: 100%;
@@ -161,10 +123,35 @@
             flex-grow: 1;
             background-color: #000;
             position: relative;
+            min-height: 200px;
+            overflow: hidden;
+        }
+        #scene_fade_overlay {
+            position: absolute; inset: 0;
+            background: #000;
+            opacity: 0; pointer-events: none;
+            z-index: 5;
+            transition: opacity 0.5s ease;
+        }
+        #scene_fade_overlay.active { opacity: 1; }
+        #scene_fade_overlay.fast { transition-duration: 0.3s; }
+        #builder_canvas > div:not(#breadcrumb):not(#scene_fade_overlay):not(#_rack_view_btns) {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: auto;
+        }
+        #builder_canvas canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            pointer-events: auto;
         }
 
         #builder_palette {
-            width: 400px; /* Widened from 300px */
+            width: 400px;
             background-color: #252526;
             border-left: 1px solid #3e3e42;
             display: flex;
@@ -175,21 +162,109 @@
         #palette_library {
             padding: 10px;
             overflow-y: auto;
-            flex-grow: 1;
+            flex: 0 0 auto;
+            max-height: 40%;
+        }
+
+        #palette_tree {
+            border-top: 1px solid #3e3e42;
+            overflow-y: auto;
+            flex: 1 1 50%;
+            min-height: 100px;
+            padding: 8px;
+            font-size: 12px;
+        }
+        #palette_tree .tree-node {
+            padding: 2px 0 2px 14px;
+            cursor: pointer;
+            white-space: nowrap;
+            border-radius: 3px;
+            color: #bbb;
+        }
+        #palette_tree .tree-node:hover {
+            background: #333;
+            color: #fff;
+        }
+        #palette_tree .tree-node.selected {
+            background: #264f78;
+            color: #fff;
+        }
+        #palette_tree .tree-node i {
+            width: 16px;
+            text-align: center;
+            margin-right: 4px;
+            font-size: 11px;
+        }
+        #palette_tree .tree-children {
+            padding-left: 10px;
+            border-left: 1px solid #3a3a3a;
+            margin-left: 6px;
+        }
+        #palette_tree .tree-toggle {
+            display: inline-block;
+            width: 12px;
+            cursor: pointer;
+            color: #888;
+            font-size: 10px;
+            user-select: none;
+        }
+        #palette_tree .tree-section {
+            color: #e8a840;
+            font-weight: bold;
+            font-size: 12px;
+            margin: 6px 0 3px 0;
+            padding: 2px 0;
         }
 
         #palette_inspector {
             padding: 10px;
             background-color: #1e1e1e;
             border-top: 1px solid #3e3e42;
-            flex-grow: 1;
-            display: none; /* Hidden by default */
             overflow-y: auto;
+            flex: 1 1 auto;
+            display: none;
+        }
+
+        #breadcrumb {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            height: 20px;
+            background: rgba(30,30,30,0.7);
+            padding: 0 10px;
+            font-size: 11px;
+            color: #bbb;
+            pointer-events: auto;
+            display: none;
+            align-items: center;
+            gap: 2px;
+            backdrop-filter: blur(6px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        #breadcrumb .bc-item {
+            cursor: pointer;
+            color: #6db3f2;
+            padding: 1px 3px;
+            border-radius: 2px;
+        }
+        #breadcrumb .bc-item:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.1);
+        }
+        #breadcrumb .bc-sep {
+            color: #555;
+            margin: 0 2px;
+        }
+        #breadcrumb .bc-current {
+            color: #fff;
+            font-weight: 600;
         }
 
         .inspector-field {
-            margin-bottom: 5px; /* Reduced margin */
-            display: flex; /* Flex layout */
+            margin-bottom: 5px;
+            display: flex;
             align-items: center;
             justify-content: space-between;
         }
@@ -197,11 +272,11 @@
         .inspector-label {
             display: block;
             font-size: 12px;
-            color: #ccc; /* Lighter color */
-            margin-bottom: 0; /* Remove bottom margin */
+            color: #ccc;
+            margin-bottom: 0;
             margin-right: 10px;
             flex-shrink: 0;
-            width: 120px; /* Fixed width for labels for alignment */
+            width: 120px;
             overflow: hidden;
             text-overflow: ellipsis;
         }
@@ -211,10 +286,10 @@
             background-color: #333;
             border: 1px solid #444;
             color: white;
-            padding: 4px; /* Reduced padding */
+            padding: 4px;
             font-size: 12px;
             box-sizing: border-box;
-            flex-grow: 1; /* Take remaining space */
+            flex-grow: 1;
         }
 
         .palette-item {
@@ -231,7 +306,7 @@
         .palette-item:hover {
             background-color: #444;
         }
-        
+
         .action-btn {
             background-color: #0e639c;
             color: white;
@@ -241,310 +316,1580 @@
             font-size: 13px;
             border-radius: 2px;
         }
-        
+
         .action-btn:hover {
             background-color: #1177bb;
         }
 
-        /* Adjust main canvas container to leave space for collapsed sidebar */
-        #infra_map {
-            margin-left: 60px;
-            width: calc(100% - 60px);
+        .view-toggle-btn {
+            background-color: #3c3c3c;
+            color: #aaa;
+            border: none;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
         }
+        .view-toggle-btn:hover {
+            background-color: #505050;
+            color: #fff;
+        }
+        .view-toggle-btn.active {
+            background-color: #0e639c;
+            color: white;
+        }
+
+        .badge-live {
+            display: inline-block;
+            background: #d32f2f;
+            color: #fff;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 5px;
+            border-radius: 3px;
+            margin-left: 6px;
+            vertical-align: middle;
+            letter-spacing: 0.5px;
+            animation: pulse-live 2s infinite;
+        }
+        @keyframes pulse-live {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        #file_selector optgroup {
+            font-style: normal;
+            font-weight: 600;
+            color: #aaa;
+            background: #2d2d2d;
+        }
+        #file_selector option {
+            font-weight: 400;
+            color: #ddd;
+            background: #3c3c3c;
+            padding: 4px 8px;
+        }
+
+        .inventory-banner {
+            display: none;
+            background: linear-gradient(90deg, #1a3a5c, #0e639c22);
+            border: 1px solid #0e639c55;
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            font-size: 11px;
+            color: #8cc4ff;
+            align-items: center;
+            gap: 8px;
+        }
+        .inventory-banner i { color: #4da6ff; }
+        .inventory-banner .btn-fork {
+            background: #0e639c;
+            color: #fff;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+        .inventory-banner .btn-fork:hover { background: #1177bb; }
+
+        #palette_inspector.readonly .inspector-input {
+            background: #2a2a2a;
+            border-color: #333;
+            color: #888;
+            pointer-events: none;
+        }
+        #palette_inspector.readonly .inspector-input:focus {
+            outline: none;
+        }
+
+        #api_monitor {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            width: 440px;
+            max-height: 320px;
+            background: rgba(20,20,24,0.92);
+            backdrop-filter: blur(8px);
+            border: 1px solid #444;
+            border-radius: 6px;
+            z-index: 9000;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 11px;
+            color: #ccc;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        #api_monitor.visible { display: flex; }
+        #api_monitor_header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid #333;
+            font-size: 11px;
+            font-weight: 600;
+            color: #8cc4ff;
+            flex-shrink: 0;
+        }
+        #api_monitor_header button {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0 4px;
+        }
+        #api_monitor_header button:hover { color: #fff; }
+        #api_monitor_body {
+            overflow-y: auto;
+            flex: 1;
+            padding: 4px 0;
+        }
+        .api-row {
+            display: flex;
+            align-items: center;
+            padding: 3px 10px;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .api-row:last-child { border-bottom: none; }
+        .api-row .api-icon {
+            width: 14px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .api-row .api-url {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #aaa;
+        }
+        .api-row .api-status {
+            flex-shrink: 0;
+            font-weight: 600;
+            min-width: 32px;
+            text-align: right;
+        }
+        .api-row .api-dur {
+            flex-shrink: 0;
+            color: #666;
+            min-width: 50px;
+            text-align: right;
+        }
+        .api-row.pending .api-icon { color: #e8a840; }
+        .api-row.pending .api-status { color: #e8a840; }
+        .api-row.ok .api-icon { color: #4ec46a; }
+        .api-row.ok .api-status { color: #4ec46a; }
+        .api-row.fail .api-icon { color: #e85050; }
+        .api-row.fail .api-status { color: #e85050; }
+        .api-row .api-count {
+            flex-shrink: 0;
+            color: #6af;
+            min-width: 38px;
+            text-align: right;
+            font-size: 11px;
+        }
+        .api-row .api-view-btn {
+            flex-shrink: 0;
+            background: rgba(0,140,255,0.15);
+            border: 1px solid rgba(0,140,255,0.3);
+            color: #6af;
+            cursor: pointer;
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 3px;
+        }
+        .api-row .api-view-btn:hover { background: rgba(0,140,255,0.3); color: #fff; }
+        #api_detail_panel {
+            display: none;
+            position: fixed;
+            top: 60px; right: 10px; bottom: 60px;
+            width: 560px;
+            background: rgba(10,14,26,0.97);
+            border: 1px solid rgba(0,170,255,0.15);
+            border-radius: 8px;
+            z-index: 20002;
+            flex-direction: column;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 11px;
+            color: #ccc;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+        }
+        #api_detail_panel.visible { display: flex; }
+        #api_detail_header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0;
+            font-weight: 600;
+            color: #6af;
+        }
+        #api_detail_header button {
+            background: none; border: none; color: #888; cursor: pointer; font-size: 16px; padding: 0 4px;
+        }
+        #api_detail_header button:hover { color: #fff; }
+        #api_detail_body {
+            flex: 1;
+            overflow: auto;
+            padding: 8px 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* ── Loading Screen ── */
+        #loading_screen {
+            position: fixed; inset: 0;
+            background: #0a0e1a;
+            z-index: 10000;
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+        }
+        #loading_screen.fade-out {
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            pointer-events: none;
+        }
+        .loading-bg-grid {
+            position: absolute; inset: 0;
+            background:
+                linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: gridScroll 20s linear infinite;
+        }
+        @keyframes gridScroll {
+            to { background-position: 40px 40px; }
+        }
+        .loading-glow {
+            position: absolute;
+            width: 500px; height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,180,255,0.06) 0%, transparent 70%);
+            animation: glowPulse 3s ease-in-out infinite;
+        }
+        @keyframes glowPulse {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.3); opacity: 1; }
+        }
+        .loading-content {
+            position: relative; z-index: 2;
+            text-align: center; max-width: 520px; width: 90%;
+        }
+        .loading-svg-wrap {
+            margin: 0 auto 20px; width: 220px; height: 160px;
+        }
+        #dc_build_svg .dc-line {
+            stroke-dasharray: 200;
+            stroke-dashoffset: 200;
+            animation: dcDraw 2.5s ease forwards;
+        }
+        #dc_build_svg .dc-line.d1 { animation-delay: 0s; }
+        #dc_build_svg .dc-line.d2 { animation-delay: 0.15s; }
+        #dc_build_svg .dc-line.d3 { animation-delay: 0.3s; }
+        #dc_build_svg .dc-line.d4 { animation-delay: 0.45s; }
+        #dc_build_svg .dc-line.d5 { animation-delay: 0.6s; }
+        #dc_build_svg .dc-line.d6 { animation-delay: 0.75s; }
+        #dc_build_svg .dc-line.d7 { animation-delay: 0.9s; }
+        #dc_build_svg .dc-line.d8 { animation-delay: 1.05s; }
+        #dc_build_svg .dc-line.d9 { animation-delay: 1.2s; }
+        #dc_build_svg .dc-line.d10 { animation-delay: 1.35s; }
+        #dc_build_svg .dc-line.d11 { animation-delay: 1.5s; }
+        #dc_build_svg .dc-line.d12 { animation-delay: 1.65s; }
+        #dc_build_svg .dc-line.d13 { animation-delay: 1.8s; }
+        #dc_build_svg .dc-line.d14 { animation-delay: 1.95s; }
+        #dc_build_svg .dc-line.d15 { animation-delay: 2.1s; }
+        #dc_build_svg .dc-fill {
+            opacity: 0;
+            animation: dcFadeIn 1s ease forwards;
+        }
+        #dc_build_svg .dc-fill.f1 { animation-delay: 2.2s; }
+        #dc_build_svg .dc-fill.f2 { animation-delay: 2.4s; }
+        #dc_build_svg .dc-fill.f3 { animation-delay: 2.6s; }
+        #dc_build_svg .dc-fill.f4 { animation-delay: 2.8s; }
+        #dc_build_svg .dc-blink {
+            animation: dcBlink 1.5s ease-in-out infinite;
+        }
+        #dc_build_svg .dc-blink.b1 { animation-delay: 2.6s; }
+        #dc_build_svg .dc-blink.b2 { animation-delay: 2.8s; }
+        #dc_build_svg .dc-blink.b3 { animation-delay: 3.0s; }
+        #dc_build_svg .dc-blink.b4 { animation-delay: 3.2s; }
+        @keyframes dcDraw {
+            to { stroke-dashoffset: 0; }
+        }
+        @keyframes dcFadeIn {
+            to { opacity: 1; }
+        }
+        @keyframes dcBlink {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        #api_monitor.loading-mode {
+            position: fixed;
+            bottom: 20px; left: 20px; right: auto;
+            width: 400px; max-height: 260px;
+            z-index: 10001;
+            border-color: rgba(0,200,255,0.15);
+            background: rgba(10,14,26,0.95);
+        }
+        #api_monitor.loading-mode .api-row { font-size: 10px; padding: 2px 8px; }
+        #api_monitor.loading-mode.fade-out-monitor {
+            opacity: 0;
+            transition: opacity 1s ease;
+            pointer-events: none;
+        }
+        .loading-logo {
+            font-size: 48px; font-weight: 800;
+            color: #fff; letter-spacing: 4px;
+            margin-bottom: 6px;
+            text-shadow: 0 0 30px rgba(0,180,255,0.5);
+        }
+        .loading-logo span { color: #00ccff; }
+        .loading-subtitle {
+            color: #446; font-size: 13px;
+            margin-bottom: 40px; letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .loading-progress-track {
+            width: 100%; height: 3px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 2px; margin-bottom: 32px;
+            overflow: hidden;
+        }
+        .loading-progress-bar {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #00ccff, #00ff88);
+            border-radius: 2px;
+            transition: width 0.4s ease;
+            box-shadow: 0 0 12px rgba(0,204,255,0.5);
+        }
+        .loading-steps {
+            display: flex; flex-direction: column;
+            gap: 10px; text-align: left;
+        }
+        .loading-step {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 12px; color: #556677;
+            transition: color 0.3s;
+        }
+        .loading-step.active { color: #8cc4ff; }
+        .loading-step.done { color: #4ec46a; }
+        .loading-step.error { color: #e85050; }
+        .loading-step-icon {
+            width: 18px; height: 18px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .loading-step-icon .dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #445566;
+        }
+        .loading-step.active .dot {
+            background: #00ccff;
+            box-shadow: 0 0 8px rgba(0,204,255,0.6);
+            animation: dotPulse 1s ease-in-out infinite;
+        }
+        .loading-step.done .dot { background: #4ec46a; }
+        .loading-step.error .dot { background: #e85050; }
+        @keyframes dotPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.5); }
+        }
+        .loading-step-text { flex: 1; }
+        .loading-step-count {
+            color: #667788; font-size: 11px; font-family: monospace;
+            min-width: 60px; text-align: right;
+        }
+        .loading-step.active .loading-step-count { color: #8cc4ff; }
+        .loading-step.done .loading-step-count { color: #4ec46a; }
+        .loading-status {
+            margin-top: 24px; color: #8899bb;
+            font-size: 11px; letter-spacing: 1px;
+        }
+        .loading-status.auth { color: #4ec46a; }
+        .loading-geo-report {
+            margin-top: 16px; text-align: left; width: 100%;
+            max-height: 220px; overflow-y: auto;
+            font-family: monospace; font-size: 11px; line-height: 1.6;
+            background: rgba(0,20,40,0.6); border: 1px solid rgba(0,170,255,0.15);
+            border-radius: 6px; padding: 10px 12px;
+        }
+        .loading-geo-report .geo-title {
+            color: #66aadd; font-weight: bold; margin-bottom: 6px; font-size: 12px;
+        }
+        .loading-geo-report .geo-row {
+            display: flex; justify-content: space-between; gap: 8px;
+            padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .loading-geo-report .geo-name { color: #ffffff; flex-shrink: 0; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .loading-geo-report .geo-addr { color: #8899bb; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .loading-geo-report .geo-coords { color: #4ec46a; flex-shrink: 0; white-space: nowrap; }
+        .loading-geo-report .geo-coords.error { color: #ff6666; }
+        #geo_error_panel {
+            display: none; position: fixed; bottom: 60px; right: 12px; z-index: 900;
+            background: rgba(10,10,20,0.92); border: 1px solid rgba(255,80,80,0.3);
+            border-radius: 8px; padding: 12px 14px; max-width: 480px; max-height: 260px;
+            overflow-y: auto; font-family: monospace; font-size: 11px; line-height: 1.5;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        #geo_error_panel .geo-err-title {
+            color: #ff8888; font-weight: bold; margin-bottom: 8px; font-size: 12px;
+        }
+        #geo_error_panel .geo-err-row {
+            display: flex; justify-content: space-between; gap: 8px;
+            padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        #geo_error_panel .geo-err-name { color: #ffffff; flex-shrink: 0; }
+        #geo_error_panel .geo-err-addr { color: #8899bb; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #geo_error_panel .geo-err-status { flex-shrink: 0; white-space: nowrap; }
+        #geo_error_panel .geo-err-status.ok { color: #4ec46a; }
+        #geo_error_panel .geo-err-status.fail { color: #ff6666; }
+        #geo_error_panel .geo-close {
+            position: absolute; top: 6px; right: 10px; background: none; border: none;
+            color: #888; font-size: 16px; cursor: pointer;
+        }
+        #geo_error_panel .geo-close:hover { color: #fff; }
+
+        #room_assoc_panel {
+            display: none; position: fixed; top: 60px; left: 12px; z-index: 900;
+            background: rgba(10,10,20,0.95); border: 1px solid rgba(0,170,255,0.2);
+            border-radius: 8px; padding: 12px 14px; max-width: 560px; max-height: 400px;
+            overflow-y: auto; font-family: monospace; font-size: 11px; line-height: 1.5;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        #room_assoc_panel .ra-title {
+            color: #6af; font-weight: bold; margin-bottom: 8px; font-size: 13px;
+        }
+        #room_assoc_panel .ra-section {
+            margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;
+        }
+        #room_assoc_panel .ra-section-title {
+            color: #e8a840; font-weight: 600; margin-bottom: 4px; font-size: 12px;
+        }
+        #room_assoc_panel .ra-row {
+            display: flex; gap: 6px; padding: 2px 0; align-items: baseline;
+        }
+        #room_assoc_panel .ra-key { color: #6af; min-width: 90px; flex-shrink: 0; }
+        #room_assoc_panel .ra-val { color: #ccc; word-break: break-all; }
+        #room_assoc_panel .ra-ok { color: #4ec46a; }
+        #room_assoc_panel .ra-warn { color: #ff8800; }
+        #room_assoc_panel .ra-fail { color: #ff5555; }
+        #room_assoc_panel .ra-close {
+            position: absolute; top: 6px; right: 10px; background: none; border: none;
+            color: #888; font-size: 16px; cursor: pointer;
+        }
+        #room_assoc_panel .ra-close:hover { color: #fff; }
     </style>
     <script src="lib/libs/tween.min.js"></script>
+
 </head>
 <body>
 
-<!-- Sidebar -->
-<div id="sidebar">
-    <div class="menu-item active" onclick="switchMode('view', this)">
-        <div class="menu-icon"><i class="fas fa-cube"></i></div>
-        <div class="menu-text">Monitoring</div>
-    </div>
-    <div class="menu-item" onclick="switchMode('edit', this)">
-        <div class="menu-icon"><i class="fas fa-code"></i></div>
-        <div class="menu-text">Éditeur d'Infrastructure</div>
+<div id="loading_screen">
+    <div class="loading-bg-grid"></div>
+    <div class="loading-glow"></div>
+    <div class="loading-content">
+        <div class="loading-svg-wrap">
+            <svg id="dc_build_svg" viewBox="0 0 220 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Building shell -->
+                <rect x="30" y="30" width="160" height="110" rx="3" class="dc-line d1" stroke="#00ccff" stroke-width="1.2"/>
+                <!-- Roof -->
+                <line x1="30" y1="30" x2="110" y2="10" class="dc-line d2" stroke="#00ccff" stroke-width="1"/>
+                <line x1="190" y1="30" x2="110" y2="10" class="dc-line d3" stroke="#00ccff" stroke-width="1"/>
+                <!-- Door -->
+                <rect x="90" y="100" width="40" height="40" rx="2" class="dc-line d4" stroke="#0088cc" stroke-width="1"/>
+                <!-- Rack rows -->
+                <rect x="40" y="40" width="35" height="50" rx="1" class="dc-line d5" stroke="#00aadd" stroke-width="0.8"/>
+                <rect x="80" y="40" width="35" height="50" rx="1" class="dc-line d6" stroke="#00aadd" stroke-width="0.8"/>
+                <rect x="120" y="40" width="35" height="50" rx="1" class="dc-line d7" stroke="#00aadd" stroke-width="0.8"/>
+                <rect x="160" y="40" width="25" height="50" rx="1" class="dc-line d8" stroke="#00aadd" stroke-width="0.8"/>
+                <!-- Rack shelves -->
+                <line x1="40" y1="50" x2="75" y2="50" class="dc-line d9" stroke="#006688" stroke-width="0.6"/>
+                <line x1="40" y1="60" x2="75" y2="60" class="dc-line d9" stroke="#006688" stroke-width="0.6"/>
+                <line x1="40" y1="70" x2="75" y2="70" class="dc-line d9" stroke="#006688" stroke-width="0.6"/>
+                <line x1="40" y1="80" x2="75" y2="80" class="dc-line d9" stroke="#006688" stroke-width="0.6"/>
+                <line x1="80" y1="50" x2="115" y2="50" class="dc-line d10" stroke="#006688" stroke-width="0.6"/>
+                <line x1="80" y1="60" x2="115" y2="60" class="dc-line d10" stroke="#006688" stroke-width="0.6"/>
+                <line x1="80" y1="70" x2="115" y2="70" class="dc-line d10" stroke="#006688" stroke-width="0.6"/>
+                <line x1="80" y1="80" x2="115" y2="80" class="dc-line d10" stroke="#006688" stroke-width="0.6"/>
+                <line x1="120" y1="50" x2="155" y2="50" class="dc-line d11" stroke="#006688" stroke-width="0.6"/>
+                <line x1="120" y1="60" x2="155" y2="60" class="dc-line d11" stroke="#006688" stroke-width="0.6"/>
+                <line x1="120" y1="70" x2="155" y2="70" class="dc-line d11" stroke="#006688" stroke-width="0.6"/>
+                <line x1="120" y1="80" x2="155" y2="80" class="dc-line d11" stroke="#006688" stroke-width="0.6"/>
+                <!-- Cable tray on ceiling -->
+                <line x1="35" y1="36" x2="185" y2="36" class="dc-line d12" stroke="#00ffaa" stroke-width="0.5" stroke-dasharray="3 2"/>
+                <!-- AC unit -->
+                <rect x="165" y="95" width="20" height="18" rx="2" class="dc-line d13" stroke="#0077aa" stroke-width="0.8"/>
+                <circle cx="175" cy="104" r="5" class="dc-line d14" stroke="#0077aa" stroke-width="0.6"/>
+                <!-- Antenna -->
+                <line x1="110" y1="10" x2="110" y2="2" class="dc-line d15" stroke="#ff4444" stroke-width="1"/>
+                <circle cx="110" cy="2" r="2" class="dc-line d15" stroke="#ff4444" stroke-width="0.8"/>
+                <!-- Server LEDs (blink after build) -->
+                <circle cx="46" cy="50" r="1.2" class="dc-blink b1" fill="#00ff66" opacity="0"/>
+                <circle cx="46" cy="60" r="1.2" class="dc-blink b2" fill="#00ccff" opacity="0"/>
+                <circle cx="86" cy="50" r="1.2" class="dc-blink b3" fill="#00ff66" opacity="0"/>
+                <circle cx="86" cy="70" r="1.2" class="dc-blink b4" fill="#ffaa00" opacity="0"/>
+                <circle cx="126" cy="60" r="1.2" class="dc-blink b1" fill="#00ff66" opacity="0"/>
+                <circle cx="126" cy="80" r="1.2" class="dc-blink b3" fill="#00ccff" opacity="0"/>
+                <!-- Glow fills -->
+                <rect x="41" y="41" width="33" height="48" rx="1" class="dc-fill f1" fill="rgba(0,170,255,0.06)"/>
+                <rect x="81" y="41" width="33" height="48" rx="1" class="dc-fill f2" fill="rgba(0,170,255,0.06)"/>
+                <rect x="121" y="41" width="33" height="48" rx="1" class="dc-fill f3" fill="rgba(0,170,255,0.06)"/>
+                <rect x="161" y="41" width="23" height="48" rx="1" class="dc-fill f4" fill="rgba(0,170,255,0.04)"/>
+            </svg>
+        </div>
+        <div class="loading-logo">3<span>D</span>IT</div>
+        <div class="loading-subtitle">Infrastructure Editor</div>
+        <div class="loading-progress-track">
+            <div class="loading-progress-bar" id="loading_bar"></div>
+        </div>
+        <div class="loading-steps" id="loading_steps"></div>
+        <div class="loading-geo-report" id="loading_geo_report" style="display:none;"></div>
+        <div class="loading-status" id="loading_status">Initialisation...</div>
     </div>
 </div>
 
-<!-- Editor Container -->
 <div id="editor_container" style="display:none;">
     <div id="editor_header">
         <div style="display: flex; align-items: center; gap: 10px;">
-            <h3>Projet :</h3>
-            <select id="file_selector" onchange="loadSelectedFile()" style="padding: 5px; background: #3c3c3c; color: white; border: 1px solid #555;">
-                <option value="" disabled selected>Choisir un fichier...</option>
+            <h3 style="margin:0;">Projet :</h3>
+            <select id="file_selector" onchange="loadSelectedFile()" style="padding: 5px; background: #3c3c3c; color: white; border: 1px solid #555; min-width: 220px;">
+                <option value="" disabled selected>Choisir un projet...</option>
             </select>
-            <button class="action-btn" onclick="window.builder.createNewScene()"><i class="fas fa-plus"></i> Nouveau</button>
+            <span id="live_badge" class="badge-live" style="display:none;">LIVE</span>
+            <button class="action-btn" id="btn_new_project" onclick="window.builder.createNewScene()"><i class="fas fa-plus"></i> Nouveau</button>
         </div>
-        <div style="display: flex; gap: 10px;">
-            <button class="action-btn" onclick="applyJsonChanges(false)">Appliquer (Local)</button>
-            <button class="action-btn" onclick="saveFile()" style="background-color: #2da042;">Sauvegarder</button>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <div id="view_toggle" style="display: flex; border-radius: 4px; overflow: hidden; border: 1px solid #555;">
+                <button class="view-toggle-btn active" id="btn_logical_view" onclick="window.builder.switchView('logical')">
+                    <i class="fas fa-project-diagram"></i> Vue Logique
+                </button>
+                <button class="view-toggle-btn" id="btn_physical_view" onclick="window.builder.switchView('physical')">
+                    <i class="fas fa-warehouse"></i> Vue Physique
+                </button>
+            </div>
+            <button class="action-btn" onclick="window.builder && window.builder.resetCamera()" title="Réinitialiser la caméra"><i class="fas fa-video"></i></button>
+            <button class="action-btn" onclick="applyJsonChanges()">Appliquer</button>
+            <button class="action-btn" id="btn_save" onclick="saveFile()" style="background-color: #2da042;"><i class="fas fa-save"></i> Sauvegarder</button>
+            <button class="action-btn" onclick="publishPresentation()" style="background-color: #8855cc;" title="Publier une présentation"><i class="fas fa-share-alt"></i> Publier</button>
+            <button class="action-btn" id="btn_debug" onclick="toggleDebugPanels()" style="background-color: #555;" title="Debug"><i class="fas fa-bug"></i></button>
+            <div id="user_info">
+                <i class="fas fa-user-circle"></i>
+                <span class="user-name" id="user_name">...</span>
+                <button class="logout-btn" id="logout_btn" onclick="window.keycloakLogout && window.keycloakLogout()">Déconnexion</button>
+            </div>
         </div>
     </div>
-    
+
     <div class="editor-tabs">
         <button class="tab-btn active" onclick="openTab('visual')">Constructeur 3D</button>
         <button class="tab-btn" onclick="openTab('json')">Éditeur JSON</button>
     </div>
 
-    <!-- Tab 1: Visual Builder (Default) -->
     <div id="tab_visual" class="tab-content active">
         <div id="builder_layout">
-            <div id="builder_canvas"></div>
+            <div id="builder_canvas">
+                <div id="breadcrumb"></div>
+                <div id="scene_fade_overlay"></div>
+            </div>
             <div id="builder_palette">
-                <!-- Library Section -->
+                <div id="inventory_banner" class="inventory-banner">
+                    <i class="fas fa-database"></i>
+                    <span style="flex:1;">Inventaire en lecture seule</span>
+                    <button class="btn-fork" onclick="forkInventoryToProject()"><i class="fas fa-code-branch"></i> Créer un projet</button>
+                </div>
                 <div id="palette_library">
-                    <h4 style="margin-top:0;">Objets Disponibles</h4>
-                    <div class="palette-item" onclick="window.builder.addObjectToScene('site')">
+                    <h4 style="margin-top:0;"><i class="fas fa-plus-circle" style="margin-right:6px;color:#6db3f2;"></i>Ajouter à la scène</h4>
+                    <div class="palette-item" draggable="true" data-type="site" onclick="window.builder.addObjectToScene('site')">
                         <i class="fas fa-building"></i> Site
                     </div>
-                    <div class="palette-item" onclick="window.builder.addObjectToScene('zone')">
-                        <i class="fas fa-vector-square"></i> Zone
+                    <div class="palette-item" draggable="true" data-type="datacenter" onclick="window.builder.addObjectToScene('datacenter')">
+                        <i class="fas fa-warehouse"></i> Datacenter
                     </div>
-                    <div class="palette-item" onclick="window.builder.addObjectToScene('network')">
-                        <i class="fas fa-network-wired"></i> Réseau
-                    </div>
-                    <div class="palette-item" onclick="window.builder.addObjectToScene('instance')">
-                        <i class="fas fa-server"></i> Instance
-                    </div>
-                    <div class="palette-item" onclick="window.builder.addObjectToScene('firewall')">
-                        <i class="fas fa-shield-alt"></i> Firewall/Device
-                    </div>
-                    <div class="palette-item" onclick="window.builder.addObjectToScene('interface')">
-                        <i class="fas fa-ethernet"></i> Interface
-                    </div>
-                    <div class="palette-item" onclick="window.builder.addObjectToScene('ip')">
-                        <i class="fas fa-map-marker-alt"></i> IP
-                    </div>
-                    <div class="palette-item" onclick="window.builder.addObjectToScene('service')">
-                        <i class="fas fa-cogs"></i> Service
-                    </div>
-                    <hr style="border-color:#444">
-                    <small style="color:#888">Cliquez pour ajouter au JSON</small>
+                    <small style="color:#666;display:block;margin-top:6px;">Uniquement les éléments racines</small>
                 </div>
 
-                <!-- Inspector Section -->
+                <div id="palette_tree">
+                    <h4 style="margin:0 0 6px 0;color:#ccc;font-size:13px;"><i class="fas fa-sitemap" style="margin-right:6px;color:#6db3f2;"></i>Navigation</h4>
+                    <div id="tree_content"></div>
+                </div>
+
                 <div id="palette_inspector">
-                    <h4 style="margin-top:0; border-bottom: 1px solid #444; padding-bottom: 5px;">Inspecteur</h4>
+                    <div id="inspector_breadcrumb" style="margin-bottom:8px;"></div>
                     <div id="inspector_content"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Tab 2: JSON -->
     <div id="tab_json" class="tab-content">
         <textarea id="json_editor" spellcheck="false"></textarea>
     </div>
 </div>
 
-<div id="infra_map" style="width: calc(100% - 60px); height:100%; margin-left: 60px;"></div>
 <script type="importmap">
     {
         "imports": {
             "three": "./node_modules/three/build/three.module.min.js",
             "three-mesh-ui": "./node_modules/three-mesh-ui/build/three-mesh-ui.module.min.js",
-            "dat.gui": "./node_modules/dat.gui/build/dat.gui.module.js"
+            "keycloak-js": "./node_modules/keycloak-js/lib/keycloak.js"
         }
     }
-    </script>
+</script>
 <script type="module">
   import * as THREE from "three";
-  window.THREE = THREE; // Make THREE available globally for window functions
+  window.THREE = THREE;
   import * as ThreeMeshUI from "three-mesh-ui";
-  import { home } from './home.js'
-  import { site } from './site.js'
-  import { VRButton } from './node_modules/three/examples/jsm/webxr/VRButton.js'
-  import {networkScene} from "./scene.js";
-  import {infra} from "./infra.js";
+  import Keycloak from 'keycloak-js';
   import { Builder } from './builder.js';
+  import { ApiClient } from './api-client.js';
 
+  const api = new ApiClient();
+  window.api = api;
 
-  var $rootScope = document;
-  var $location = {};
-  var scene = new networkScene('infra_map', $rootScope, $location, '');
-  document.scene = scene;
-  //scene.freeCamera();
-
-  document.scene.renderer.setAnimationLoop(function () {
-    document.scene.renderer.render(document.scene.scene, document.scene.camera)
-
-  })
-
-  document.body.appendChild(VRButton.createButton(document.scene.renderer));
-
-  // --- Initialize Home with Dynamic Projects ---
-  const API_URL = 'api.php';
-
-  function initHomeWithProjects() {
-      fetch(`${API_URL}?action=list`)
-      .then(res => res.json())
-      .then(data => {
-          // Add projects from API
-          if (data.files && data.files.length > 0) {
-              data.files.forEach(file => {
-                  const name = file.replace('.json', ''); // Pretty name
-                  const path = 'projects/' + file;
-                  document.scene.addProject(path, name);
-              });
-          } else {
-              console.warn("No projects found via API.");
-          }
-
-          // Initialize Home AFTER projects are added
-          document.home = new home({}, document.scene);
-          document.scene.registerHome(document.home);
-          document.home.init();
-          document.scene.goHome();
-      })
-      .catch(err => {
-          console.error("Error loading project list:", err);
-          // Fallback init if API fails
-          document.home = new home({}, document.scene);
-          document.scene.registerHome(document.home);
-          document.home.init();
-          document.scene.goHome();
-      });
+  // --- Loading screen helpers ---
+  const _loadingSteps = {};
+  function loadingSetStatus(text, cls = '') {
+      const el = document.getElementById('loading_status');
+      if (el) { el.textContent = text; el.className = 'loading-status' + (cls ? ' ' + cls : ''); }
+  }
+  function loadingSetProgress(pct) {
+      const bar = document.getElementById('loading_bar');
+      if (bar) bar.style.width = Math.min(100, Math.max(0, pct)) + '%';
+  }
+  function loadingAddStep(id, label) {
+      const container = document.getElementById('loading_steps');
+      if (!container) return;
+      const step = document.createElement('div');
+      step.className = 'loading-step';
+      step.id = 'lstep_' + id;
+      step.innerHTML = `<div class="loading-step-icon"><div class="dot"></div></div>`
+          + `<div class="loading-step-text">${label}</div>`
+          + `<div class="loading-step-count" id="lstep_count_${id}"></div>`;
+      container.appendChild(step);
+      _loadingSteps[id] = step;
+  }
+  function loadingStepActive(id) {
+      const s = _loadingSteps[id]; if (s) s.className = 'loading-step active';
+  }
+  function loadingStepDone(id, count) {
+      const s = _loadingSteps[id]; if (s) s.className = 'loading-step done';
+      const c = document.getElementById('lstep_count_' + id);
+      if (c && count !== undefined) c.textContent = count + ' items';
+  }
+  function loadingStepError(id, msg) {
+      const s = _loadingSteps[id]; if (s) s.className = 'loading-step error';
+      const c = document.getElementById('lstep_count_' + id);
+      if (c) c.textContent = msg || 'erreur';
+  }
+  function loadingStepCount(id, count) {
+      const c = document.getElementById('lstep_count_' + id);
+      if (c) c.textContent = count + '...';
+  }
+  function loadingHide() {
+      const screen = document.getElementById('loading_screen');
+      if (screen) {
+          screen.classList.add('fade-out');
+          setTimeout(() => screen.remove(), 900);
+      }
   }
 
-  // Start init
-  initHomeWithProjects();
+  // --- Keycloak Auth ---
+  async function initKeycloak() {
+      function showStatus(msg) {
+          loadingSetStatus(msg);
+      }
+      function showError(msg) {
+          const screen = document.getElementById('loading_screen');
+          if (!screen) return;
+          const errDiv = document.getElementById('loading_error') || document.createElement('div');
+          errDiv.id = 'loading_error';
+          errDiv.style.cssText = 'margin-top:20px;text-align:center;max-width:500px;';
+          errDiv.innerHTML = msg;
+          const content = screen.querySelector('.loading-content');
+          if (content && !document.getElementById('loading_error')) content.appendChild(errDiv);
+      }
 
-  // --- Initialize Builder ---
+      showStatus('Chargement de la configuration Keycloak...');
+      console.log('[Auth] Loading keycloak config...');
+      const kcConfigResp = await fetch('/config/keycloak.json');
+      const kcConfig = await kcConfigResp.json();
+      console.log('[Auth] Keycloak config loaded:', { url: kcConfig.url, realm: kcConfig.realm, clientId: kcConfig.clientId });
+
+      showStatus('Initialisation de l\'authentification...');
+      const keycloak = new Keycloak(kcConfig);
+      window._keycloak = keycloak;
+
+      keycloak.onAuthError = (err) => {
+          console.error('[Auth] Keycloak auth error:', err);
+      };
+      keycloak.onAuthRefreshError = () => {
+          console.error('[Auth] Token refresh failed, re-login required');
+      };
+
+      try {
+          console.log('[Auth] Calling keycloak.init({ onLoad: "login-required", pkceMethod: "S256" })...');
+          const authenticated = await keycloak.init({
+              onLoad: 'login-required',
+              checkLoginIframe: false,
+              pkceMethod: 'S256'
+          });
+
+          if (!authenticated) {
+              console.log('[Auth] Not authenticated, redirecting to login...');
+              keycloak.login();
+              return false;
+          }
+
+          console.log('[Auth] Authenticated successfully');
+          console.log('[Auth] Token present:', !!keycloak.token);
+          console.log('[Auth] Token length:', keycloak.token ? keycloak.token.length : 0);
+          console.log('[Auth] Token (first 50 chars):', keycloak.token ? keycloak.token.substring(0, 50) + '...' : 'null');
+          console.log('[Auth] Token parsed:', keycloak.tokenParsed ? {
+              sub: keycloak.tokenParsed.sub,
+              preferred_username: keycloak.tokenParsed.preferred_username,
+              email: keycloak.tokenParsed.email,
+              exp: keycloak.tokenParsed.exp,
+              iss: keycloak.tokenParsed.iss,
+              aud: keycloak.tokenParsed.aud,
+              azp: keycloak.tokenParsed.azp,
+              scope: keycloak.tokenParsed.scope
+          } : 'null');
+
+          api.setToken(keycloak.token);
+          console.log('[Auth] Token set on ApiClient');
+
+          setInterval(() => {
+              keycloak.updateToken(30).then(refreshed => {
+                  if (refreshed) {
+                      api.setToken(keycloak.token);
+                      console.log('[Auth] Token refreshed');
+                  }
+              }).catch(() => keycloak.login());
+          }, 30000);
+
+          const nameEl = document.getElementById('user_name');
+          if (nameEl && keycloak.tokenParsed) {
+              nameEl.textContent = keycloak.tokenParsed.preferred_username
+                  || keycloak.tokenParsed.name
+                  || keycloak.tokenParsed.email
+                  || 'Utilisateur';
+          }
+          window.keycloakLogout = () => keycloak.logout();
+          return true;
+
+      } catch (err) {
+          console.error('[Auth] Keycloak init FAILED:', err);
+          console.error('[Auth] Error name:', err.name);
+          console.error('[Auth] Error message:', err.message);
+          console.error('[Auth] Error stack:', err.stack);
+
+          showError(`
+              <div style="color:#e85050;font-size:14px;margin-bottom:10px;">
+                  <i class="fas fa-exclamation-triangle"></i> Erreur d'authentification
+              </div>
+              <div style="color:#ccc;font-size:12px;margin-bottom:10px;">${err.message || err}</div>
+              <div style="color:#888;font-size:11px;margin-bottom:14px;">
+                  Keycloak: ${kcConfig.url}<br>
+                  Realm: ${kcConfig.realm}<br>
+                  Client: ${kcConfig.clientId}
+              </div>
+              <button onclick="location.reload()" style="padding:6px 16px;background:#4a90d9;color:#fff;border:none;border-radius:4px;cursor:pointer;">Réessayer</button>
+              <button onclick="document.getElementById('loading_screen')?.remove();document.getElementById('editor_container').style.display='flex';" 
+                  style="padding:6px 16px;background:#444;color:#ccc;border:1px solid #555;border-radius:4px;cursor:pointer;margin-left:8px;">Continuer sans auth</button>
+          `);
+          return false;
+      }
+  }
+
+  const authOk = await initKeycloak();
+  if (!authOk) {
+      console.warn('[Auth] App stopped - authentication required');
+      throw new Error('Auth required');
+  }
+
+  loadingSetStatus('Authentification réussie', 'auth');
+  loadingSetProgress(10);
+  document.getElementById('editor_container').style.display = 'flex';
+
   window.builder = new Builder('builder_canvas', 'json_editor');
 
-  // --- UI Logic ---
-  
-  window.switchMode = function(mode, element) {
-      // Update Menu UI
-      if (element) {
-        document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-        element.classList.add('active');
+  window._currentConfigId = null;
+  window._isInventoryMode = false;
+  window._inventoryJSON = null;
+
+  // --- Build inventory project from API ---
+  async function buildInventoryProject(withLoadingUI = false) {
+      console.log('[Inventory] Building inventory project from API...');
+      if (!api._token) {
+          console.error('[Inventory] WARNING: No auth token - API calls will fail.');
       }
 
-      const infraMap = document.getElementById('infra_map');
-      const editorContainer = document.getElementById('editor_container');
+      const steps = [
+          { id: 'dc', label: 'Datacenters', fn: (p) => api.listDatacenters(p) },
+          { id: 'loc', label: 'Locations (salles)', fn: (p) => api.listLocations(p) },
+          { id: 'racks', label: 'Racks', fn: (p) => api.listRacks(p) },
+          { id: 'devices', label: 'Devices', fn: (p) => api.listDevices(p) },
+          { id: 'dtypes', label: 'Types de devices', fn: (p) => api.listDeviceTypes(p) },
+          { id: 'hosts', label: 'Machines virtuelles', fn: (p) => api.listHosts(p) },
+      ];
 
-      if (mode === 'view') {
-          infraMap.style.display = 'block';
-          editorContainer.style.display = 'none';
-      } else if (mode === 'edit') {
-          infraMap.style.display = 'none';
-          editorContainer.style.display = 'flex'; // Changed to flex for layout
-          refreshFileList();
-          // Initialize scene immediately since it's the default tab now
-          // Force animate = true when switching to edit mode
-          setTimeout(() => window.builder.init(true), 100);
+      if (withLoadingUI) {
+          for (const s of steps) loadingAddStep(s.id, s.label);
+          loadingAddStep('geo', 'Géocodage des adresses');
+          loadingAddStep('build', 'Construction du modèle 3D');
+      }
+
+      const data = {};
+      const totalSteps = steps.length + 2;
+      for (let i = 0; i < steps.length; i++) {
+          const s = steps[i];
+          if (withLoadingUI) {
+              loadingStepActive(s.id);
+              loadingSetStatus(`Chargement ${s.label}...`);
+          }
+          try {
+              data[s.id] = await s.fn((count) => {
+                  if (withLoadingUI) loadingStepCount(s.id, count);
+              });
+              const count = Array.isArray(data[s.id]) ? data[s.id].length : 0;
+              console.log(`[Inventory] ${s.label}: ${count} elements`);
+              if (withLoadingUI) loadingStepDone(s.id, count);
+          } catch (e) {
+              console.warn(`[Inventory] ${s.label}: FAILED -`, e.message);
+              data[s.id] = [];
+              if (withLoadingUI) loadingStepError(s.id, e.message?.substring(0, 30));
+          }
+          if (withLoadingUI) loadingSetProgress(10 + ((i + 1) / totalSteps) * 80);
+      }
+
+      const dcList = data.dc || [];
+      const locationList = data.loc || [];
+      const rackList = data.racks || [];
+      const deviceList = data.devices || [];
+      const dtList = data.dtypes || [];
+      const hostList = data.hosts || [];
+
+      function _id(obj) { return obj.Id ?? obj.id ?? obj.ID; }
+
+      const locationsByDC = {};
+      const _roomAssocReport = [];
+      const _dcIdSet = new Set(dcList.map(dc => String(_id(dc))));
+
+      locationList.forEach(loc => {
+          const locName = loc.Titre || loc.Name || loc.Nom || '(sans nom)';
+          const sitesId = loc.SitesId ?? null;
+          const datacentersId = loc.DatacentersId ?? null;
+          const datacenterId = loc.DatacenterId ?? null;
+          const resolvedId = sitesId || datacentersId || datacenterId || '_none';
+          const matchesDC = _dcIdSet.has(String(resolvedId));
+
+          _roomAssocReport.push({
+              locId: _id(loc),
+              locName,
+              SitesId: sitesId,
+              DatacentersId: datacentersId,
+              DatacenterId: datacenterId,
+              resolvedDcId: resolvedId,
+              matched: matchesDC,
+              allKeys: Object.keys(loc).filter(k => k.toLowerCase().includes('id') || k.toLowerCase().includes('site') || k.toLowerCase().includes('datacenter'))
+                  .map(k => `${k}=${loc[k]}`).join(', ')
+          });
+
+          if (!locationsByDC[resolvedId]) locationsByDC[resolvedId] = [];
+          locationsByDC[resolvedId].push(loc);
+      });
+      console.log('[Inventory] Locations grouped by DC:', Object.entries(locationsByDC).map(([k, v]) => `${k}: ${v.length}`).join(', '));
+      console.log('[Room Assoc Report]', _roomAssocReport);
+
+      const dtMap = {};
+      dtList.forEach(dt => { dtMap[_id(dt)] = dt; });
+
+      function isSwitch(device) {
+          const dt = dtMap[device.DevicesTypesId];
+          if (!dt) return false;
+          const t = ((dt.Titre || '') + ' ' + (dt.Manufacturer || '')).toLowerCase();
+          return t.includes('switch') || t.includes('cisco') || t.includes('palo') || t.includes('firewall') || t.includes('fortinet');
+      }
+
+      function deviceSizeU(device) {
+          const dt = dtMap[device.DevicesTypesId];
+          return dt && dt.Height ? parseInt(dt.Height) || 1 : 1;
+      }
+
+      function deviceTypeImages(device) {
+          const dt = dtMap[device.DevicesTypesId];
+          if (!dt) return {};
+          const result = {};
+          if (dt.FrontImage) result.frontImage = dt.FrontImage;
+          if (dt.RearImage) result.rearImage = dt.RearImage;
+          const ports = parseInt(dt.NetworkPorts) || 0;
+          if (ports > 0) result.networkPorts = ports;
+          return result;
+      }
+
+      function deviceTypeName(device) {
+          const dt = dtMap[device.DevicesTypesId];
+          if (!dt) return 'generic-1u';
+          const m = (dt.Manufacturer || '').toLowerCase();
+          const t = (dt.Titre || '').toLowerCase();
+          if (m.includes('dell')) return 'dell-poweredge-' + (deviceSizeU(device)) + 'u';
+          if (m.includes('hpe') || m.includes('hp')) return 'hpe-apollo-' + (deviceSizeU(device)) + 'u';
+          if (t.includes('switch') || m.includes('cisco')) return 'cisco-copper-48';
+          if (t.includes('palo') || t.includes('firewall') || m.includes('fortinet')) return 'palo-alto-1u';
+          return 'generic-' + (deviceSizeU(device)) + 'u';
+      }
+
+      // Map location -> datacenter, and build location map
+      const locationToDC = {};
+      const locationMap = {};
+      locationList.forEach(loc => {
+          const dcId = loc.SitesId || loc.DatacentersId || loc.DatacenterId;
+          if (dcId) locationToDC[_id(loc)] = dcId;
+          locationMap[_id(loc)] = loc;
+      });
+
+      // Group racks by datacenter via Location -> DC chain
+      const racksByDC = {};
+      // Also group racks by location (room)
+      const racksByLocation = {};
+      rackList.forEach(r => {
+          const locId = r.LocationsId;
+          const dcId = locationToDC[locId] || r.DatacentersId || r.DatacenterId || '_none';
+          if (!racksByDC[dcId]) racksByDC[dcId] = [];
+          racksByDC[dcId].push(r);
+          const locKey = locId || '_no_room';
+          if (!racksByLocation[locKey]) racksByLocation[locKey] = [];
+          racksByLocation[locKey].push(r);
+      });
+      console.log('[Inventory] Racks grouped by DC:', Object.entries(racksByDC).map(([k, v]) => `${k}: ${v.length}`).join(', '));
+
+      const devicesByRack = {};
+      deviceList.forEach(d => {
+          const rid = d.RacksId || d.RackId || '_none';
+          if (!devicesByRack[rid]) devicesByRack[rid] = [];
+          devicesByRack[rid].push(d);
+      });
+
+      function buildRackObj(r) {
+          const devs = devicesByRack[_id(r)] || [];
+          return {
+              name: r.Titre || r.Name || ('Rack ' + _id(r)),
+              class: 'rack',
+              units: parseInt(r.Height) || 42,
+              _apiId: _id(r),
+              equipment: devs.map(d => ({
+                  name: d.Name || 'Device',
+                  class: isSwitch(d) ? 'physicalswitch' : 'physicalserver',
+                  type: deviceTypeName(d),
+                  startU: parseInt(d.Position) || 1,
+                  sizeU: deviceSizeU(d),
+                  _apiId: _id(d),
+                  ...deviceTypeImages(d)
+              }))
+          };
+      }
+
+      function parseRackName(rack) {
+          const name = rack.Titre || rack.Name || '';
+          const match = name.match(/^([A-Za-z])(\d+)/);
+          if (match) return { letter: match[1].toUpperCase(), num: parseInt(match[2]) };
+          return { letter: '_', num: 1 };
+      }
+
+      function groupRacksByRow(racks) {
+          if (racks.length === 0) return [];
+
+          let maxLetter = 'A';
+          let maxNum = 1;
+          const rackMap = {};
+
+          racks.forEach(r => {
+              const { letter, num } = parseRackName(r);
+              if (letter > maxLetter && letter !== '_') maxLetter = letter;
+              if (num > maxNum) maxNum = num;
+              const key = letter + num;
+              rackMap[key] = r;
+          });
+
+          const rowCount = maxLetter.charCodeAt(0) - 'A'.charCodeAt(0) + 1;
+          const rows = [];
+
+          for (let ri = 0; ri < rowCount; ri++) {
+              const letter = String.fromCharCode('A'.charCodeAt(0) + ri);
+              const rowRacks = [];
+
+              for (let ni = 1; ni <= maxNum; ni++) {
+                  const key = letter + ni;
+                  const real = rackMap[key];
+                  if (real) {
+                      rowRacks.push(buildRackObj(real));
+                  } else {
+                      rowRacks.push({
+                          name: key,
+                          class: 'rack',
+                          units: 42,
+                          ghost: true,
+                          equipment: []
+                      });
+                  }
+              }
+
+              rows.push({
+                  name: 'Rangée ' + letter,
+                  class: 'row',
+                  rowIndex: ri,
+                  racks: rowRacks
+              });
+          }
+
+          return rows;
+      }
+
+      function cleanAddress(raw) {
+          if (!raw) return '';
+          let a = raw.trim();
+          a = a.replace(/(\d{5})\s*([A-ZÀ-Ü][a-zà-ü])/g, '$1 $2');
+          a = a.replace(/([a-zà-ü])([A-ZÀ-Ü])/g, '$1, $2');
+
+          const parts = a.split(/,\s*/);
+          const seen = new Set();
+          const deduped = [];
+          for (const p of parts) {
+              const key = p.trim().toLowerCase();
+              if (key && !seen.has(key)) {
+                  seen.add(key);
+                  deduped.push(p.trim());
+              }
+          }
+          a = deduped.join(', ');
+          a = a.replace(/\s+/g, ' ').trim();
+          return a;
+      }
+
+      function extractPostalCity(address) {
+          const match = address.match(/(\d{4,5})\s+([A-ZÀ-Üa-zà-ü\s-]+)/);
+          if (match) return `${match[1]} ${match[2].trim()}`;
+          const cityMatch = address.match(/,\s*([A-ZÀ-Ü][a-zà-ü]+(?:\s[A-ZÀ-Ü][a-zà-ü]+)*)$/);
+          if (cityMatch) return cityMatch[1];
+          return null;
+      }
+
+      async function geocodeNominatim(query) {
+          try {
+              const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`;
+              const resp = await fetch(url);
+              if (!resp.ok) return null;
+              const data = await resp.json();
+              if (data.length > 0) {
+                  return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+              }
+          } catch (e) {
+              console.warn(`[Geocode/Nominatim] Error for "${query}":`, e.message);
+          }
+          return null;
+      }
+
+      async function geocodePhoton(query) {
+          try {
+              const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=1`;
+              const resp = await fetch(url);
+              if (!resp.ok) return null;
+              const data = await resp.json();
+              if (data.features && data.features.length > 0) {
+                  const coords = data.features[0].geometry.coordinates;
+                  return { lat: coords[1], lng: coords[0] };
+              }
+          } catch (e) {
+              console.warn(`[Geocode/Photon] Error for "${query}":`, e.message);
+          }
+          return null;
+      }
+
+      async function geocodeAddress(rawAddress) {
+          if (!rawAddress) return null;
+          const cleaned = cleanAddress(rawAddress);
+          console.log(`[Geocode] Trying cleaned: "${cleaned}"`);
+
+          let result = await geocodeNominatim(cleaned);
+          if (result) { console.log(`[Geocode] Nominatim OK: "${cleaned}" -> ${result.lat}, ${result.lng}`); return result; }
+
+          result = await geocodePhoton(cleaned);
+          if (result) { console.log(`[Geocode] Photon OK: "${cleaned}" -> ${result.lat}, ${result.lng}`); return result; }
+
+          const postalCity = extractPostalCity(cleaned);
+          if (postalCity && postalCity !== cleaned) {
+              console.log(`[Geocode] Fallback postal+city: "${postalCity}"`);
+              result = await geocodeNominatim(postalCity);
+              if (result) { console.log(`[Geocode] Nominatim postal OK: "${postalCity}" -> ${result.lat}, ${result.lng}`); return result; }
+
+              result = await geocodePhoton(postalCity);
+              if (result) { console.log(`[Geocode] Photon postal OK: "${postalCity}" -> ${result.lat}, ${result.lng}`); return result; }
+          }
+
+          console.warn(`[Geocode] All methods failed for "${rawAddress}"`);
+          return null;
+      }
+
+      async function buildPhysicalDatacenters() {
+          if (withLoadingUI) {
+              loadingStepActive('geo');
+              loadingSetStatus('Géocodage des adresses...');
+          }
+          const dcConfigs = [];
+          const geoReport = [];
+          let geoCount = 0;
+          for (const dc of dcList) {
+              const dcRacks = racksByDC[_id(dc)] || [];
+              const dcLocations = locationsByDC[_id(dc)] || [];
+
+              const rawLat = dc.Latitude ?? dc.latitude ?? null;
+              const rawLng = dc.Longitude ?? dc.longitude ?? null;
+              let lat = (rawLat !== null && rawLat !== '' && !isNaN(parseFloat(rawLat))) ? parseFloat(rawLat) : null;
+              let lng = (rawLng !== null && rawLng !== '' && !isNaN(parseFloat(rawLng))) ? parseFloat(rawLng) : null;
+              const address = dc.PhysicalAddress || dc.Address || dc.Adresse || '';
+              const dcName = dc.Name || dc.Titre || ('DC ' + _id(dc));
+              let geoSource = 'api';
+              let needsPatch = false;
+
+              if (lat != null && lng != null && lat !== 0 && lng !== 0) {
+                  geoSource = 'api';
+              } else {
+                  const geo = await geocodeAddress(address);
+                  if (geo) {
+                      lat = geo.lat;
+                      lng = geo.lng;
+                      geoSource = 'geocode';
+                      needsPatch = true;
+                  } else {
+                      geoSource = 'failed';
+                  }
+              }
+
+              if (needsPatch && _id(dc)) {
+                  try {
+                      await api.patchDatacenter(_id(dc), { Latitude: String(lat), Longitude: String(lng) });
+                      console.log(`[Geocode] PATCH OK for "${dcName}": ${lat}, ${lng}`);
+                      geoSource = 'geocode+saved';
+                  } catch (e) {
+                      console.warn(`[Geocode] PATCH failed for "${dcName}":`, e.message);
+                      geoSource = 'geocode (save failed)';
+                  }
+              }
+
+              geoReport.push({ name: dcName, address, lat, lng, source: geoSource, dcId: _id(dc) });
+              console.log(`[Geocode DC] "${dcName}" addr="${address}" apiLat=${rawLat} apiLng=${rawLng} -> lat=${lat} lng=${lng} (${geoSource})`, dc);
+              geoCount++;
+              if (withLoadingUI) loadingStepCount('geo', `${geoCount}/${dcList.length}`);
+
+              const roomConfigs = [];
+              for (const loc of dcLocations) {
+                  const roomRacks = racksByLocation[_id(loc)] || [];
+                  const rows = groupRacksByRow(roomRacks);
+                  roomConfigs.push({
+                      name: loc.Titre || loc.Name || loc.Nom || 'Salle',
+                      class: 'room',
+                      _apiId: _id(loc),
+                      description: loc.Description || loc.Commentaire || '',
+                      rows: rows,
+                  });
+              }
+
+              console.log(`[Inventory] DC "${dc.Name || dc.Titre}" -> lat:${lat}, lng:${lng}, racks:${dcRacks.length}, rooms:${roomConfigs.length}`);
+
+              dcConfigs.push({
+                  name: dc.Name || dc.Titre || ('DC ' + _id(dc)),
+                  class: 'datacenter',
+                  _apiId: _id(dc),
+                  lat: lat,
+                  lng: lng,
+                  address: address,
+                  description: dc.Description || dc.Commentaire || '',
+                  rooms: roomConfigs,
+                  cables: []
+              });
+          }
+          if (withLoadingUI) {
+              loadingStepDone('geo', geoCount);
+              const reportEl = document.getElementById('loading_geo_report');
+              if (reportEl) {
+                  let html = '<div class="geo-title">📍 Rapport de géocodage</div>';
+                  for (const g of geoReport) {
+                      const ok = g.lat != null && g.lng != null;
+                      const coordsClass = ok ? '' : 'error';
+                      let sourceIcon = '';
+                      if (g.source === 'api') sourceIcon = '📦';
+                      else if (g.source.includes('saved')) sourceIcon = '💾';
+                      else if (g.source.startsWith('geocode')) sourceIcon = '🌍';
+                      else sourceIcon = '❌';
+                      const coordsText = ok
+                          ? `${g.lat.toFixed(4)}, ${g.lng.toFixed(4)} ${sourceIcon} ${g.source}`
+                          : `❌ Non résolu`;
+                      html += `<div class="geo-row">
+                          <span class="geo-name" title="${g.name}">${g.name}</span>
+                          <span class="geo-addr" title="${g.address}">${g.address || '<i>pas d\'adresse</i>'}</span>
+                          <span class="geo-coords ${coordsClass}">${coordsText}</span>
+                      </div>`;
+                  }
+                  reportEl.innerHTML = html;
+                  reportEl.style.display = 'block';
+              }
+          }
+          console.log('[Geocoding Report]', geoReport);
+
+          const hasGeoErrors = geoReport.some(g => g.lat == null || g.lng == null);
+          const errPanel = document.getElementById('geo_error_panel_content');
+          if (errPanel) {
+              const title = hasGeoErrors ? '⚠️ Rapport de géocodage' : '📍 Rapport de géocodage';
+              let html = `<div class="geo-err-title">${title}</div>`;
+              for (const g of geoReport) {
+                  const hasCoords = g.lat != null && g.lng != null;
+                  const statusCls = hasCoords ? 'ok' : 'fail';
+                  const statusText = hasCoords
+                      ? `${g.lat.toFixed(4)}, ${g.lng.toFixed(4)} (${g.source})`
+                      : '❌ Non résolu';
+                  html += `<div class="geo-err-row">
+                      <span class="geo-err-name">${g.name}</span>
+                      <span class="geo-err-addr" title="${g.address}">${g.address || 'pas d\'adresse'}</span>
+                      <span class="geo-err-status ${statusCls}">${statusText}</span>
+                  </div>`;
+              }
+              errPanel.innerHTML = html;
+              if (hasGeoErrors) {
+                  document.getElementById('geo_error_panel').style.display = 'block';
+              }
+          }
+
+          const raPanel = document.getElementById('room_assoc_content');
+          if (raPanel) {
+              const matched = _roomAssocReport.filter(r => r.matched);
+              const unmatched = _roomAssocReport.filter(r => !r.matched);
+              const hasProblems = unmatched.length > 0;
+
+              let html = `<div class="ra-title">${hasProblems ? '⚠️' : '✅'} Rapport d'association Salles ↔ Datacenters</div>`;
+              html += `<div class="ra-section">`;
+              html += `<div class="ra-section-title">📊 Résumé</div>`;
+              html += `<div class="ra-row"><span class="ra-key">Locations API</span><span class="ra-val">${locationList.length}</span></div>`;
+              html += `<div class="ra-row"><span class="ra-key">Datacenters API</span><span class="ra-val">${dcList.length}</span></div>`;
+              html += `<div class="ra-row"><span class="ra-key">Associées</span><span class="ra-val ra-ok">${matched.length}</span></div>`;
+              html += `<div class="ra-row"><span class="ra-key">Non associées</span><span class="ra-val ${unmatched.length > 0 ? 'ra-fail' : 'ra-ok'}">${unmatched.length}</span></div>`;
+              html += `</div>`;
+
+              html += `<div class="ra-section"><div class="ra-section-title">📋 IDs des Datacenters disponibles</div>`;
+              for (const dc of dcList) {
+                  const dcLocs = locationsByDC[_id(dc)] || [];
+                  const cls = dcLocs.length > 0 ? 'ra-ok' : 'ra-warn';
+                  html += `<div class="ra-row"><span class="ra-key ${cls}">${_id(dc)}</span><span class="ra-val">${dc.Name || dc.Titre || '?'} → ${dcLocs.length} salle(s)</span></div>`;
+              }
+              html += `</div>`;
+
+              if (unmatched.length > 0) {
+                  html += `<div class="ra-section"><div class="ra-section-title">❌ Locations NON associées</div>`;
+                  for (const r of unmatched) {
+                      html += `<div style="border-bottom:1px solid rgba(255,255,255,0.05);padding:4px 0;">`;
+                      html += `<div class="ra-row"><span class="ra-key">Location</span><span class="ra-val ra-fail">${r.locName} (id: ${r.locId})</span></div>`;
+                      html += `<div class="ra-row"><span class="ra-key">SitesId</span><span class="ra-val">${r.SitesId ?? '<i style="color:#666">null</i>'}</span></div>`;
+                      html += `<div class="ra-row"><span class="ra-key">DatacentersId</span><span class="ra-val">${r.DatacentersId ?? '<i style="color:#666">null</i>'}</span></div>`;
+                      html += `<div class="ra-row"><span class="ra-key">DatacenterId</span><span class="ra-val">${r.DatacenterId ?? '<i style="color:#666">null</i>'}</span></div>`;
+                      html += `<div class="ra-row"><span class="ra-key">Résolu vers</span><span class="ra-val ra-fail">${r.resolvedDcId} (pas dans la liste DC)</span></div>`;
+                      html += `<div class="ra-row"><span class="ra-key">Clefs ID</span><span class="ra-val" style="font-size:10px;">${r.allKeys}</span></div>`;
+                      html += `</div>`;
+                  }
+                  html += `</div>`;
+              }
+
+              if (matched.length > 0) {
+                  html += `<div class="ra-section"><div class="ra-section-title">✅ Locations associées</div>`;
+                  for (const r of matched) {
+                      const dcMatch = dcList.find(d => String(_id(d)) === String(r.resolvedDcId));
+                      const dcName = dcMatch ? (dcMatch.Name || dcMatch.Titre) : '?';
+                      html += `<div class="ra-row"><span class="ra-key ra-ok">${r.locName}</span><span class="ra-val">→ DC "${dcName}" (${r.resolvedDcId}) via ${r.SitesId ? 'SitesId' : r.DatacentersId ? 'DatacentersId' : 'DatacenterId'}</span></div>`;
+                  }
+                  html += `</div>`;
+              }
+
+              raPanel.innerHTML = html;
+              if (hasProblems) {
+                  document.getElementById('room_assoc_panel').style.display = 'block';
+              }
+          }
+
+          return dcConfigs;
+      }
+
+      function buildLogicalSites() {
+          const defaultZone = {
+              name: 'Production',
+              class: 'zone',
+              style: { childPosition: 'horizontal', minWidth: 12, minDepth: 10 },
+              networks: [{
+                  name: 'LAN',
+                  class: 'network',
+                  network: '0.0.0.0/0',
+                  style: { childPosition: 'horizontal', color: '#ffffff', minWidth: 20, minDepth: 8 },
+                  ips: []
+              }]
+          };
+          return [{
+              name: 'Infrastructure',
+              class: 'site',
+              style: { childPosition: 'horizontal', minWidth: 10 },
+              zones: [defaultZone]
+          }];
+      }
+
+      // Build instances from hosts
+      function buildInstances() {
+          return hostList
+              .filter(h => h.PowerStatus !== 'Off')
+              .map(h => ({
+                  name: h.Nom || h.Name || ('VM-' + _id(h)),
+                  class: 'instance',
+                  cpu: h.NbCpu || 2,
+                  ram: h.NbRam || 4096,
+                  os: h.OsType || 'linux',
+                  storage: h.EspaceProvisionne ? Math.round(h.EspaceProvisionne / 1024) : 50,
+                  _apiId: _id(h),
+                  interfaces: h.IP ? [{
+                      class: 'interface',
+                      mac: '00:00:00:00:00:00',
+                      position: 'front',
+                      net: '',
+                      ips: [{ class: 'ip', ip: h.IP }],
+                      style: { color: '#cccccc' }
+                  }] : [],
+                  services: [],
+                  style: { childPosition: 'horizontal' }
+              }));
+      }
+
+      if (withLoadingUI) {
+          loadingStepActive('build');
+          loadingSetStatus('Construction du modèle 3D...');
+          loadingSetProgress(90);
+      }
+
+      const physDCs = await buildPhysicalDatacenters();
+      const logSites = buildLogicalSites();
+      const instances = buildInstances();
+
+      const project = {
+          sites: logSites,
+          instances: instances,
+          networkdevices: [],
+          physical: { datacenters: physDCs }
+      };
+
+      if (withLoadingUI) {
+          loadingStepDone('build', `${physDCs.length} DC`);
+          loadingSetProgress(100);
+          loadingSetStatus('Prêt !');
+      }
+
+      console.log(`[Inventory] Built: ${dcList.length} DCs, ${rackList.length} racks, ${deviceList.length} devices, ${hostList.length} hosts`);
+      return project;
+  }
+
+  // --- UI mode switching ---
+  function setInventoryMode(enabled) {
+      window._isInventoryMode = enabled;
+      const banner = document.getElementById('inventory_banner');
+      const library = document.getElementById('palette_library');
+      const inspector = document.getElementById('palette_inspector');
+      const badge = document.getElementById('live_badge');
+      const saveBtn = document.getElementById('btn_save');
+
+      if (enabled) {
+          banner.style.display = 'flex';
+          library.style.display = 'none';
+          inspector.classList.add('readonly');
+          badge.style.display = 'inline-block';
+          saveBtn.style.display = 'none';
+      } else {
+          banner.style.display = 'none';
+          library.style.display = '';
+          inspector.classList.remove('readonly');
+          badge.style.display = 'none';
+          saveBtn.style.display = '';
+      }
+  }
+
+  // --- File list with optgroups ---
+  window.refreshFileList = async function() {
+      try {
+          const configs = await api.listConfigs().catch(() => []);
+          const selector = document.getElementById('file_selector');
+          const currentVal = selector.value;
+          selector.innerHTML = '';
+
+          // Inventory optgroup
+          const invGroup = document.createElement('optgroup');
+          invGroup.label = 'Inventaire';
+          const invOpt = document.createElement('option');
+          invOpt.value = '__inventory__';
+          invOpt.textContent = 'Infrastructure Septeo (live)';
+          invGroup.appendChild(invOpt);
+          selector.appendChild(invGroup);
+
+          // User projects optgroup
+          const projGroup = document.createElement('optgroup');
+          projGroup.label = 'Mes Projets';
+          const cfgList = Array.isArray(configs) ? configs : [];
+          if (cfgList.length === 0) {
+              const emptyOpt = document.createElement('option');
+              emptyOpt.disabled = true;
+              emptyOpt.textContent = 'Aucun projet';
+              projGroup.appendChild(emptyOpt);
+          } else {
+              cfgList.forEach(cfg => {
+                  const option = document.createElement('option');
+                  option.value = cfg.id || cfg.Titre;
+                  option.innerText = cfg.Titre || cfg.id;
+                  option.dataset.configId = cfg.id || '';
+                  projGroup.appendChild(option);
+              });
+          }
+          selector.appendChild(projGroup);
+
+          if (currentVal) {
+              selector.value = currentVal;
+          } else {
+              selector.value = '__inventory__';
+          }
+      } catch (err) {
+          console.error("Error listing configs:", err);
       }
   };
 
-  window.openTab = function(tabName) {
-      // Hide all contents
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-      
-      // Show selected
-      document.getElementById('tab_' + tabName).classList.add('active');
-      
-      // Update buttons
-      const buttons = document.querySelectorAll('.tab-btn');
-      if(tabName === 'visual') {
-          buttons[0].classList.add('active');
-          window.builder.init();
-      }
-      if(tabName === 'json') buttons[1].classList.add('active');
-  };
+  // --- Load selected file or inventory ---
+  window.loadSelectedFile = async function() {
+      const selector = document.getElementById('file_selector');
+      const selectedOption = selector.options[selector.selectedIndex];
+      if (!selectedOption || !selectedOption.value) return;
 
-  window.refreshFileList = function() {
-      fetch(`${API_URL}?action=list`)
-        .then(res => res.json())
-        .then(data => {
-            const selector = document.getElementById('file_selector');
-            const currentVal = selector.value;
-            selector.innerHTML = '<option value="" disabled>Choisir un fichier...</option>';
-            
-            data.files.forEach(file => {
-                const option = document.createElement('option');
-                option.value = file;
-                option.innerText = file;
-                selector.appendChild(option);
-            });
+      const val = selectedOption.value;
 
-            // Restore selection if still exists, or select default if nothing selected
-            if (currentVal && data.files.includes(currentVal)) {
-                selector.value = currentVal;
-            } else if (!currentVal && data.files.includes('kubernetes-simple.json')) {
-                selector.value = 'kubernetes-simple.json';
-                loadSelectedFile();
-            }
-        })
-        .catch(err => console.error("Error listing files:", err));
-  };
+      if (val === '__inventory__') {
+          setInventoryMode(true);
+          window._currentConfigId = null;
+          window._currentConfigTitre = 'Infrastructure Septeo';
 
-  window.loadSelectedFile = function() {
-      const filename = document.getElementById('file_selector').value;
-      console.log("Load File triggered for:", filename);
-      if(!filename) return;
+          try {
+              const invData = await buildInventoryProject();
+              window._inventoryJSON = invData;
+              const jsonEditor = document.getElementById('json_editor');
+              jsonEditor.value = JSON.stringify(invData, null, 4);
 
-      fetch(`${API_URL}?action=load&file=${encodeURIComponent(filename)}`)
-        .then(response => response.text())
-        .then(text => {
-            const jsonEditor = document.getElementById('json_editor');
-            try {
-                const obj = JSON.parse(text);
-                // Update editor value
-                jsonEditor.value = JSON.stringify(obj, null, 4);
-                console.log("JSON loaded and parsed");
-                
-                // If viewing (not editing), move camera if config exists
-                if(document.getElementById('infra_map').style.display !== 'none') {
-                    if (obj.camera && obj.camera.position) {
-                        // Use animateCamera for smooth transition in View mode
-                        document.scene.animateCamera(obj.camera.position, obj.camera.target || {x:0, y:0, z:0});
-                    }
-                } else {
-                    // Edit Mode
-                    // If the builder tab is active, we must update/init immediately
-                    const visualTab = document.getElementById('tab_visual');
-                    const isActive = visualTab.classList.contains('active');
-                    console.log("Edit Mode. Visual Tab Active:", isActive);
-                    
-                    if (isActive) {
-                        if (!window.builder.scene) {
-                            console.log("Initializing Builder...");
-                            window.builder.init();
-                        } else {
-                            console.log("Updating Builder from JSON...");
-                            // Force a small delay to ensure DOM update? Not usually needed but safe.
-                            // window.builder.updateFromJSON();
-                            setTimeout(() => window.builder.updateFromJSON(true), 10);
-                        }
-                    } else {
-                        // We are on JSON tab, data is updated in textarea, 
-                        // builder will update next time we click the tab.
-                        console.log("Visual Tab not active, skipping 3D update.");
-                    }
-                }
-            } catch(e) {
-                console.error("Error parsing/loading:", e);
-                jsonEditor.value = text;
-            }
-        })
-        .catch(err => console.error("Error loading file:", err));
-  };
-
-  window.saveFile = function() {
-      const filename = document.getElementById('file_selector').value;
-      const content = document.getElementById('json_editor').value;
-      
-      if(!filename) {
-          alert("Aucun fichier sélectionné !");
+              const visualTab = document.getElementById('tab_visual');
+              if (visualTab.classList.contains('active')) {
+                  if (!window.builder.scene) {
+                      window.builder.init();
+                  } else {
+                      setTimeout(() => window.builder.updateFromJSON(true), 10);
+                  }
+              }
+          } catch(err) {
+              console.error("Error building inventory:", err);
+              alert("Impossible de charger l'inventaire : " + err.message);
+          }
           return;
       }
 
-      // Validate JSON first
+      setInventoryMode(false);
+      const configId = selectedOption.dataset.configId || val;
+      console.log("Loading config:", configId);
+
+      try {
+          const config = await api.loadConfig(configId);
+          const jsonEditor = document.getElementById('json_editor');
+
+          let jsonData;
+          if (typeof config.Json === 'string') {
+              jsonData = JSON.parse(config.Json);
+          } else if (config.Json) {
+              jsonData = config.Json;
+          } else {
+              jsonData = config;
+          }
+
+          jsonEditor.value = JSON.stringify(jsonData, null, 4);
+          window._currentConfigId = configId;
+          window._currentConfigTitre = config.Titre || selectedOption.value;
+
+          const visualTab = document.getElementById('tab_visual');
+          if (visualTab.classList.contains('active')) {
+              if (!window.builder.scene) {
+                  window.builder.init();
+              } else {
+                  setTimeout(() => window.builder.updateFromJSON(true), 10);
+              }
+          }
+      } catch (err) {
+          console.error("Error loading config:", err);
+      }
+  };
+
+  // --- Fork inventory into editable project ---
+  window.forkInventoryToProject = async function() {
+      if (!window._inventoryJSON) {
+          alert("Aucun inventaire chargé.");
+          return;
+      }
+      const name = prompt("Nom du nouveau projet :", "Projet depuis inventaire");
+      if (!name) return;
+
+      try {
+          const jsonCopy = JSON.parse(JSON.stringify(window._inventoryJSON));
+          const result = await api.saveConfig(name, jsonCopy);
+          if (result && result.id) {
+              window._currentConfigId = result.id;
+              window._currentConfigTitre = name;
+          }
+          setInventoryMode(false);
+          await refreshFileList();
+          const selector = document.getElementById('file_selector');
+          if (result && result.id) {
+              for (let i = 0; i < selector.options.length; i++) {
+                  if (selector.options[i].value === result.id) {
+                      selector.selectedIndex = i;
+                      break;
+                  }
+              }
+          }
+          alert("Projet créé ! Vous pouvez maintenant le modifier librement.");
+      } catch(err) {
+          alert("Erreur : " + err.message);
+      }
+  };
+
+  window.saveFile = async function() {
+      if (window._isInventoryMode) {
+          if (confirm("L'inventaire est en lecture seule. Voulez-vous créer un nouveau projet à partir de celui-ci ?")) {
+              forkInventoryToProject();
+          }
+          return;
+      }
+
+      const selector = document.getElementById('file_selector');
+      const content = document.getElementById('json_editor').value;
+      const titre = window._currentConfigTitre || selector.options[selector.selectedIndex]?.text || 'untitled';
+
+      if (!content) {
+          alert("Aucun contenu à sauvegarder !");
+          return;
+      }
+
       try {
           JSON.parse(content);
       } catch(e) {
@@ -552,35 +1897,401 @@
           return;
       }
 
-      fetch(`${API_URL}?action=save`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ file: filename, content: content })
-      })
-      .then(res => res.json())
-      .then(data => {
-          if(data.success) {
-              alert("Fichier sauvegardé avec succès !");
-          } else {
-              alert("Erreur lors de la sauvegarde: " + (data.error || 'Inconnue'));
+      try {
+          if (window._currentConfigId) {
+              await api.deleteConfig(window._currentConfigId);
           }
-      })
-      .catch(err => alert("Erreur réseau: " + err));
+          const result = await api.saveConfig(titre, content);
+          if (result && result.id) {
+              window._currentConfigId = result.id;
+          }
+          alert("Configuration sauvegardée !");
+          refreshFileList();
+      } catch (err) {
+          alert("Erreur de sauvegarde: " + err.message);
+      }
   };
 
-  window.applyJsonChanges = function(reload = false) {
+  window.applyJsonChanges = function() {
       const jsonEditor = document.getElementById('json_editor');
       try {
-          const newConfig = JSON.parse(jsonEditor.value);
-          console.log("Applying new configuration locally:", newConfig);
-          // TODO: Implement live scene reload here if possible
-          // document.scene.reloadProject(newConfig);
-          alert("Configuration valide (Appliquée en mémoire).");
+          JSON.parse(jsonEditor.value);
+          if (window.builder.scene) {
+              window.builder.updateFromJSON(true);
+          }
       } catch (e) {
           alert("Erreur JSON: " + e.message);
       }
   };
+
+  window.openTab = function(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+      document.getElementById('tab_' + tabName).classList.add('active');
+
+      const buttons = document.querySelectorAll('.tab-btn');
+      if (tabName === 'visual') {
+          buttons[0].classList.add('active');
+          window.builder.init();
+      }
+      if (tabName === 'json') buttons[1].classList.add('active');
+  };
+
+  window.publishPresentation = async function() {
+      const content = document.getElementById('json_editor').value;
+      if (!content) {
+          alert("Aucun projet ouvert à publier.");
+          return;
+      }
+      try {
+          JSON.parse(content);
+      } catch(e) {
+          alert("JSON invalide.");
+          return;
+      }
+
+      try {
+          const titre = window._currentConfigTitre || 'Presentation';
+          const result = await api.publishPresentation(titre, content);
+          if (result && result.id) {
+              const url = window.location.origin + '/p/' + result.id;
+              prompt("Présentation publiée ! Copiez l'URL :", url);
+          } else {
+              alert("Présentation publiée.");
+          }
+      } catch(err) {
+          alert("Erreur publication: " + err.message);
+      }
+  };
+
+  // Auto-load config from URL params: ?config=id
+  const urlParams = new URLSearchParams(window.location.search);
+  const autoFile = urlParams.get('file') || urlParams.get('config');
+
+  async function initApp() {
+      await refreshFileList();
+      window.builder.init(true);
+
+      if (autoFile) {
+          const selector = document.getElementById('file_selector');
+          for (let i = 0; i < selector.options.length; i++) {
+              if (selector.options[i].value === autoFile || selector.options[i].text === autoFile) {
+                  selector.selectedIndex = i;
+                  loadingHide();
+                  window.loadSelectedFile();
+                  return;
+              }
+          }
+          loadingHide();
+      } else {
+          setInventoryMode(true);
+          window._currentConfigId = null;
+          window._currentConfigTitre = 'Infrastructure Septeo';
+          const selector = document.getElementById('file_selector');
+          selector.value = '__inventory__';
+
+          try {
+              const invData = await buildInventoryProject(true);
+              window._inventoryJSON = invData;
+              const jsonEditor = document.getElementById('json_editor');
+              jsonEditor.value = JSON.stringify(invData, null, 4);
+
+              if (!window.builder.scene) {
+                  window.builder.init();
+              } else {
+                  window.builder.updateFromJSON(true);
+              }
+
+              await new Promise(r => setTimeout(r, 200));
+
+              window.builder.currentView = 'physical';
+              window.builder._physicalViewLevel = 'globe';
+              document.getElementById('btn_physical_view')?.classList.add('active');
+              document.getElementById('btn_logical_view')?.classList.remove('active');
+              window.builder.renderTree();
+
+              if (window.builder._currentInfra) {
+                  window.builder._currentInfra.showGlobeView();
+              }
+              await window.builder._applyViewVisibility();
+              if (window.builder.scene && window.builder.scene.scene) {
+                  window.builder.scene.scene.updateMatrixWorld(true);
+              }
+
+              const gc = window.builder._getGlobeWorldCenter();
+              if (window.builder.scene && window.builder.scene.camera) {
+                  window.builder.scene.camera.position.set(gc.x, gc.y, gc.z + 80);
+                  if (window.builder.scene.controls) {
+                      window.builder.scene.controls.target.copy(gc);
+                      window.builder.scene.controls.update();
+                  }
+              }
+
+              await new Promise(r => setTimeout(r, 100));
+              loadingHide();
+              hideApiMonitorIfClean();
+
+              await new Promise(r => setTimeout(r, 400));
+
+              window.builder._animateCameraWithOrbit(
+                  new THREE.Vector3(gc.x, gc.y + 18, gc.z + 32),
+                  gc.clone(),
+                  2500
+              );
+              window.builder._applyGlobeControls(2600);
+
+              await new Promise(r => setTimeout(r, 800));
+              if (window.builder._currentInfra) {
+                  window.builder._startGlobeIdleAnimation();
+              }
+          } catch(err) {
+              console.error("Error building inventory:", err);
+              loadingHide();
+          }
+      }
+  }
+
+  // --- API Monitor panel ---
+  const monitorRows = {};
+  let _monitorHasErrors = false;
+  function initApiMonitor() {
+      const panel = document.getElementById('api_monitor');
+      if (panel) {
+          panel.classList.add('loading-mode', 'visible');
+      }
+      api.onRequest((evt) => {
+          const panel = document.getElementById('api_monitor');
+          const body = document.getElementById('api_monitor_body');
+          if (!panel || !body) return;
+
+          panel.classList.add('visible');
+
+          const shortUrl = evt.url.replace('https://api-infra.septeo.fr', '');
+          const key = evt.method + ':' + evt.url;
+
+          if (evt.status === 'pending') {
+              const row = document.createElement('div');
+              row.className = 'api-row pending';
+              row.innerHTML = `<span class="api-icon"><i class="fas fa-spinner fa-spin"></i></span>`
+                  + `<span class="api-url" title="${evt.url}">${shortUrl}</span>`
+                  + `<span class="api-count"></span>`
+                  + `<span class="api-status">...</span>`
+                  + `<span class="api-dur"></span>`
+                  + `<span class="api-view-wrap"></span>`;
+              body.appendChild(row);
+              monitorRows[key] = row;
+              body.scrollTop = body.scrollHeight;
+          } else {
+              const row = monitorRows[key];
+              if (!row) return;
+              const isOk = typeof evt.status === 'number' && evt.status >= 200 && evt.status < 400;
+              row.className = 'api-row ' + (isOk ? 'ok' : 'fail');
+              row.querySelector('.api-icon').innerHTML = isOk
+                  ? '<i class="fas fa-check-circle"></i>'
+                  : '<i class="fas fa-times-circle"></i>';
+              row.querySelector('.api-status').textContent = evt.status;
+              row.querySelector('.api-dur').textContent = evt.duration + 'ms';
+              if (evt.resultCount != null) {
+                  row.querySelector('.api-count').textContent = evt.resultCount + ' res.';
+              }
+              const viewWrap = row.querySelector('.api-view-wrap');
+              if (evt.resultData != null) {
+                  const btn = document.createElement('button');
+                  btn.className = 'api-view-btn';
+                  btn.textContent = '🔍';
+                  btn.title = 'Voir les données';
+                  btn.onclick = () => showApiDetail(shortUrl, evt.resultData);
+                  viewWrap.appendChild(btn);
+              }
+              if (!isOk && evt.requestDetail) {
+                  const errBtn = document.createElement('button');
+                  errBtn.className = 'api-view-btn';
+                  errBtn.style.borderColor = 'rgba(255,80,80,0.4)';
+                  errBtn.style.color = '#f66';
+                  errBtn.textContent = '📋';
+                  errBtn.title = 'Rapport d\'erreur';
+                  errBtn.onclick = () => showApiErrorReport(shortUrl, evt.requestDetail);
+                  viewWrap.appendChild(errBtn);
+              }
+              if (evt.error) {
+                  row.querySelector('.api-url').title = evt.error;
+              }
+              if (!isOk) _monitorHasErrors = true;
+          }
+
+          const counter = document.getElementById('api_monitor_count');
+          if (counter) {
+              const total = body.children.length;
+              const done = body.querySelectorAll('.api-row.ok').length;
+              const failed = body.querySelectorAll('.api-row.fail').length;
+              counter.textContent = `${done + failed}/${total}` + (failed > 0 ? ` (${failed} err)` : '');
+          }
+      });
+  }
+  function showApiDetail(url, data) {
+      const panel = document.getElementById('api_detail_panel');
+      const header = document.getElementById('api_detail_url');
+      const body = document.getElementById('api_detail_body');
+      if (!panel || !body) return;
+      if (header) header.textContent = url;
+      const items = Array.isArray(data) ? data : (data && data.data ? data.data : [data]);
+      let html = `<div style="color:#6af;margin-bottom:8px;">${items.length} élément(s)</div>`;
+      if (items.length > 0) {
+          const keys = Object.keys(items[0]);
+          html += `<div style="color:#888;margin-bottom:6px;">Clefs: ${keys.join(', ')}</div>`;
+      }
+      for (let i = 0; i < Math.min(items.length, 50); i++) {
+          html += `<div style="border-bottom:1px solid rgba(255,255,255,0.05);padding:4px 0;margin-bottom:4px;">`;
+          html += `<span style="color:#e8a840;">#${i + 1}</span> `;
+          const obj = items[i];
+          for (const [k, v] of Object.entries(obj)) {
+              const val = v === null ? '<i style="color:#666">null</i>' : String(v).substring(0, 120);
+              html += `<div style="padding-left:12px;"><span style="color:#6af">${k}</span>: ${val}</div>`;
+          }
+          html += `</div>`;
+      }
+      if (items.length > 50) html += `<div style="color:#888">... ${items.length - 50} de plus</div>`;
+      body.innerHTML = html;
+      panel.classList.add('visible');
+  }
+  window.showApiDetail = showApiDetail;
+
+  function showApiErrorReport(url, detail) {
+      const panel = document.getElementById('api_detail_panel');
+      const header = document.getElementById('api_detail_url');
+      const body = document.getElementById('api_detail_body');
+      if (!panel || !body) return;
+      if (header) header.textContent = '❌ ' + url;
+
+      let html = '';
+      html += `<div style="color:#f66;font-weight:bold;margin-bottom:10px;font-size:13px;">Rapport d'erreur API</div>`;
+
+      html += `<div style="color:#e8a840;font-weight:600;margin:8px 0 4px;">📤 Requête</div>`;
+      html += `<div style="padding-left:8px;">`;
+      html += `<div><span style="color:#6af">Méthode:</span> ${detail.method}</div>`;
+      html += `<div><span style="color:#6af">URL:</span> <span style="word-break:break-all;">${detail.url}</span></div>`;
+      html += `</div>`;
+
+      html += `<div style="color:#e8a840;font-weight:600;margin:8px 0 4px;">📋 En-têtes de requête</div>`;
+      html += `<div style="padding-left:8px;">`;
+      if (detail.headers) {
+          for (const [k, v] of Object.entries(detail.headers)) {
+              html += `<div><span style="color:#6af">${k}:</span> ${v}</div>`;
+          }
+      }
+      html += `</div>`;
+
+      if (detail.body) {
+          html += `<div style="color:#e8a840;font-weight:600;margin:8px 0 4px;">📦 Corps de requête</div>`;
+          html += `<pre style="padding:6px 8px;background:rgba(255,255,255,0.03);border-radius:4px;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow:auto;">${JSON.stringify(detail.body, null, 2)}</pre>`;
+      }
+
+      if (detail.response) {
+          const resp = detail.response;
+          html += `<div style="color:#f66;font-weight:600;margin:8px 0 4px;">📥 Réponse</div>`;
+          html += `<div style="padding-left:8px;">`;
+          if (resp.status) html += `<div><span style="color:#6af">Status:</span> <span style="color:#f66">${resp.status} ${resp.statusText || ''}</span></div>`;
+          if (resp.error) html += `<div><span style="color:#6af">Erreur:</span> <span style="color:#f66">${resp.error}</span></div>`;
+          html += `</div>`;
+
+          if (resp.headers) {
+              html += `<div style="color:#e8a840;font-weight:600;margin:8px 0 4px;">📋 En-têtes de réponse</div>`;
+              html += `<div style="padding-left:8px;">`;
+              for (const [k, v] of Object.entries(resp.headers)) {
+                  html += `<div><span style="color:#6af">${k}:</span> ${v}</div>`;
+              }
+              html += `</div>`;
+          }
+
+          if (resp.body) {
+              html += `<div style="color:#e8a840;font-weight:600;margin:8px 0 4px;">📦 Corps de réponse</div>`;
+              let displayBody = resp.body;
+              try { displayBody = JSON.stringify(JSON.parse(resp.body), null, 2); } catch(_) {}
+              html += `<pre style="padding:6px 8px;background:rgba(255,60,60,0.06);border:1px solid rgba(255,60,60,0.15);border-radius:4px;white-space:pre-wrap;word-break:break-all;max-height:300px;overflow:auto;color:#ddd;">${displayBody}</pre>`;
+          }
+      }
+
+      body.innerHTML = html;
+      panel.classList.add('visible');
+  }
+  window.showApiErrorReport = showApiErrorReport;
+
+  function hideApiMonitorIfClean() {
+      const panel = document.getElementById('api_monitor');
+      if (!panel) return;
+      if (_monitorHasErrors) {
+          panel.classList.remove('loading-mode');
+          panel.classList.add('visible');
+          return;
+      }
+      panel.classList.add('fade-out-monitor');
+      setTimeout(() => {
+          panel.classList.remove('visible', 'loading-mode', 'fade-out-monitor');
+          panel.style.cssText = '';
+      }, 1100);
+  }
+  initApiMonitor();
+
+  let _debugVisible = false;
+  function toggleDebugPanels() {
+      _debugVisible = !_debugVisible;
+      const btn = document.getElementById('btn_debug');
+      const monitor = document.getElementById('api_monitor');
+      const geoPanel = document.getElementById('geo_error_panel');
+      const roomPanel = document.getElementById('room_assoc_panel');
+
+      if (_debugVisible) {
+          if (btn) btn.style.backgroundColor = '#cc5500';
+          if (monitor) {
+              monitor.classList.add('visible');
+              monitor.classList.remove('loading-mode', 'fade-out-monitor');
+          }
+          if (geoPanel && geoPanel.querySelector('#geo_error_panel_content')?.innerHTML) {
+              geoPanel.style.display = 'block';
+          }
+          if (roomPanel && roomPanel.querySelector('#room_assoc_content')?.innerHTML) {
+              roomPanel.style.display = 'block';
+          }
+          console.log('[Debug] Panels shown');
+      } else {
+          if (btn) btn.style.backgroundColor = '#555';
+          if (monitor) monitor.classList.remove('visible');
+          if (geoPanel) geoPanel.style.display = 'none';
+          if (roomPanel) roomPanel.style.display = 'none';
+          console.log('[Debug] Panels hidden');
+      }
+  }
+  window.toggleDebugPanels = toggleDebugPanels;
+
+  initApp();
 </script>
+
+<div id="api_monitor">
+    <div id="api_monitor_header">
+        <span><i class="fas fa-satellite-dish" style="margin-right:6px;"></i>API Monitor <span id="api_monitor_count" style="color:#888;font-weight:400;margin-left:6px;"></span></span>
+        <button onclick="document.getElementById('api_monitor').classList.remove('visible')" title="Fermer">&times;</button>
+    </div>
+    <div id="api_monitor_body"></div>
+</div>
+
+<div id="geo_error_panel">
+    <button class="geo-close" onclick="document.getElementById('geo_error_panel').style.display='none'">&times;</button>
+    <div id="geo_error_panel_content"></div>
+</div>
+
+<div id="room_assoc_panel">
+    <button class="ra-close" onclick="document.getElementById('room_assoc_panel').style.display='none'">&times;</button>
+    <div id="room_assoc_content"></div>
+</div>
+
+<div id="api_detail_panel">
+    <div id="api_detail_header">
+        <span><i class="fas fa-database" style="margin-right:6px;"></i><span id="api_detail_url"></span></span>
+        <button onclick="document.getElementById('api_detail_panel').classList.remove('visible')" title="Fermer">&times;</button>
+    </div>
+    <div id="api_detail_body"></div>
+</div>
 
 </body>
 </html>

@@ -15,10 +15,10 @@ import * as ThreeMeshUI from "three-mesh-ui";
  ************************/
 class defaultitem {
     style = {
-        minWidth:5,
+        minWidth:8,
         decal:0,
         direction: 'front',
-        minDepth:5,
+        minDepth:6,
         minHeight:0,
         maxWidth:1000,
         maxDepth:1000,
@@ -400,12 +400,12 @@ class defaultitem {
         this.mainobj.dispose();
     }
     update(){
-        this.status = obj.status || this.status;
         this.setColors();
+        if (!this.colors || !this.colors.length) return;
         for (var n in this.mainobj.children){
             if(this.mainobj.children[n] instanceof THREE.Mesh){
-                this.mainobj.children[n].material.color.setHex(colors[0]);
-                this.mainobj.children[n].needsUpdate = true;
+                this.mainobj.children[n].material.color.setHex(this.colors[0]);
+                this.mainobj.children[n].material.needsUpdate = true;
             }
         }
     }

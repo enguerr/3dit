@@ -4,6 +4,24 @@
 import * as THREE from 'three';
 import { defaultitem } from './defaultitem.js';
 class zone extends defaultitem {
+    style = {
+        minWidth:12,
+        decal:0,
+        direction: 'front',
+        minDepth:10,
+        minHeight:0,
+        maxWidth:1000,
+        maxDepth:1000,
+        maxHeight:1000,
+        widthmargin: 1,
+        heightmargin: 1,
+        depthmargin: 1,
+        widthpadding: 1,
+        heightpadding: 1,
+        depthpadding: 1,
+        innermargin: 1,
+        childPosition:'horizontal'
+    };
     constructor(scn,config,parent) {
         super(scn,config,parent);
         //SPECS

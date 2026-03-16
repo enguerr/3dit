@@ -5,8 +5,8 @@ import * as THREE from 'three';
 import { defaultitem } from './defaultitem.js';
 class network extends defaultitem {
     style = {
-        minWidth:10,
-        minDepth:6,
+        minWidth:12,
+        minDepth:8,
         decal:0,
         direction: 'front',
         minHeight:0,

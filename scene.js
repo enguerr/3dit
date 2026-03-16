@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import * as dat from 'dat.gui';
 import { OrbitControls } from './node_modules/three/examples/jsm/controls/OrbitControls.js';
 import { position } from './position.js';
 import {BoxLineGeometry} from "./node_modules/three/examples/jsm/geometries/BoxLineGeometry.js";
@@ -58,18 +57,22 @@ function networkScene(mainDiv,$rootScope,$location,url) {
     this.home = null;
 
     //debug interface
-    this.gui = null;
 
 
     this.initScene = function (mainDiv) {
-        //init events
-        this.initWindowEvent();
+        if (mainDiv === 'infra_map') this.initWindowEvent();
         console.log('3D >> scene >> initScene');
         //initiliastion HTML
         this.container = document.createElement('div');
         this.parentDiv = document.getElementById(mainDiv);
-        this.parentDiv.appendChild(this.container);
+        this._isBuilderCanvas = (mainDiv === 'builder_canvas');
+        if (!this._isBuilderCanvas) {
+            this.parentDiv.appendChild(this.container);
+        }
         this.sProperties.containers.push(this.container);
+        if (this._isBuilderCanvas) {
+            this.container.style.cssText = 'width:100%;height:100%;position:absolute;top:0;left:0;';
+        }
 
         //orhtographic
         /*const frustumSize = 500;
@@ -77,26 +80,32 @@ function networkScene(mainDiv,$rootScope,$location,url) {
         this.camera = new THREE.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 1, 1000 );*/
 
         //initilisation camera
-        this.camera = new THREE.PerspectiveCamera(45, this.parentDiv.offsetWidth / this.parentDiv.offsetHeight, 1, 1000);
+        const aspect = (this.parentDiv.offsetWidth && this.parentDiv.offsetHeight)
+            ? this.parentDiv.offsetWidth / this.parentDiv.offsetHeight : 16/9;
+        this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 2000);
         this.camera.tweens = [];
         this.camera.lookAt(this.camOrigTarget);
 
         this.sProperties.cameras.push(this.camera);
 
         this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.Fog( 0xCCCCCC, 5, 1000 );
+        this.scene.fog = new THREE.Fog( 0x121212, 100, 500 );
         this.scene.background = new THREE.Color( 0x121212 );
 
         //Initialisation des lumières
-        var ambient = new THREE.AmbientLight( 0x444444 );
-        ambient.intensity = 0.1;
+        var ambient = new THREE.AmbientLight( 0x888888 );
+        ambient.intensity = 0.6;
         this.scene.add(ambient);
 
         var dirLight = new THREE.DirectionalLight( 0xFFFFFF, 1 );
         dirLight.name = 'Dir. Light';
-        dirLight.intensity = 0.1;
+        dirLight.intensity = 0.7;
         dirLight.position.set( 3, 12, 17 );
         this.scene.add(dirLight);
+
+        var dirLight2 = new THREE.DirectionalLight( 0xaaccff, 0.5 );
+        dirLight2.position.set( -5, -30, 10 );
+        this.scene.add(dirLight2);
 
 
         this.spotlight = new THREE.SpotLight( 0x888888);
@@ -117,8 +126,6 @@ function networkScene(mainDiv,$rootScope,$location,url) {
         /*var cameraLightHelper = new THREE.PointLightHelper( this.spotlight, 5, 0x00ff00 );
         this.scene.add( cameraLightHelper );*/
 
-        //init GUI DEBUG
-        this.initGuiDebug(ambient,dirLight,this.spotlight);
 
         //Initilisation du gestionnaire de chargement
         var manager = new THREE.LoadingManager();
@@ -141,11 +148,15 @@ function networkScene(mainDiv,$rootScope,$location,url) {
 
         //Initilisation du moteur de rendu
         this.renderer = new THREE.WebGLRenderer({antialias: true});
-        this.renderer.xr.enabled = true;
+        if (!this._isBuilderCanvas) {
+            this.renderer.xr.enabled = true;
+        }
         //this.renderer = new THREE.WebGLRenderer({alpha:true});
         this.renderer.setPixelRatio(window.devicePixelRatio);
-        this.renderer.setSize(this.parentDiv.offsetWidth, this.parentDiv.offsetHeight);
-        console.log('3D >> scene >> init ', this.parentDiv.offsetWidth, this.parentDiv.offsetHeight, this.parentDiv);
+        const w = Math.max(this.parentDiv.offsetWidth || 1, 1);
+        const h = Math.max(this.parentDiv.offsetHeight || 1, 1);
+        this.renderer.setSize(w, h);
+        console.log('3D >> scene >> init ', w, h, this.parentDiv);
         //this.renderer.setClearColor(0xffffff, 0);
         this.renderer.setClearColor(0xcccccc, 1);
 
@@ -155,25 +166,33 @@ function networkScene(mainDiv,$rootScope,$location,url) {
 
         //affectation
         this.sProperties.renderers.push(this.renderer);
-        this.container.appendChild(this.renderer.domElement);
+        if (this._isBuilderCanvas) {
+            const el = this.renderer.domElement;
+            el.setAttribute('tabindex', '0');
+            el.style.cssText = 'display:block;width:100%;height:100%;position:absolute;top:0;left:0;outline:none;';
+            this.parentDiv.appendChild(el);
+        } else {
+            this.container.appendChild(this.renderer.domElement);
+        }
         this.scene.uProps = this.sProperties;
 
-        //ground
-        var ground = new THREE.Mesh( new THREE.PlaneGeometry( 200, 200 ), new THREE.MeshPhongMaterial( {
-            color: 0x191919,
-            shininess: 0,
-            specular: 0xfdfdfd
-        } ) );
-        ground.rotation.x = -Math.PI/2;
-        ground.scale.multiplyScalar( 3 );
-        ground.castShadow = false;
-        ground.receiveShadow = true;
-        this.scene.add( ground );
-        var room = new THREE.LineSegments(
-            new BoxLineGeometry( 80, 60, 200, 100, 100, 100 ).translate( 0, 30, -40 ),
-            new THREE.LineBasicMaterial( { color: 0x343434 } )
-        );
-        this.scene.add(room);
+        if (mainDiv === 'infra_map') {
+            var ground = new THREE.Mesh( new THREE.PlaneGeometry( 200, 200 ), new THREE.MeshPhongMaterial( {
+                color: 0x191919,
+                shininess: 0,
+                specular: 0xfdfdfd
+            } ) );
+            ground.rotation.x = -Math.PI/2;
+            ground.scale.multiplyScalar( 3 );
+            ground.castShadow = false;
+            ground.receiveShadow = true;
+            this.scene.add( ground );
+            var room = new THREE.LineSegments(
+                new BoxLineGeometry( 80, 60, 200, 100, 100, 100 ).translate( 0, 30, -40 ),
+                new THREE.LineBasicMaterial( { color: 0x343434 } )
+            );
+            this.scene.add(room);
+        }
         this.scene.add(this.connectorContainer);
 
         //Recalcule la scene toutes les x msecondes
@@ -207,26 +226,6 @@ function networkScene(mainDiv,$rootScope,$location,url) {
         } );
     };
 
-    this.initGuiDebug = function(ambient,dirLight,spotLight) {
-        //initialisation interface
-        this.gui = new dat.GUI({name: 'DEBUG LIGHTS'});
-        var folder1 = this.gui.addFolder('Camera Position');
-        folder1.add(this.camera.position,'x',-100,+100);
-        folder1.add(this.camera.position,'y',-100,+100);
-        folder1.add(this.camera.position,'z',-100,+100);
-        /*var folder2 = this.gui.addFolder('Camera Target');
-        folder2.add(this.camera.target,'x',-100,+100);
-        folder2.add(this.camera.target,'y',-100,+100);
-        folder2.add(this.camera.target,'z',-100,+100);*/
-        var scnobj = this;
-        this.gui.add({ Compute:function (){scnobj.compute()}},'Compute');
-        this.gui.add({ DebugSite:function (){document.infra.enableDebug('site')}},'DebugSite');
-        this.gui.add({ DebugScene:function (){scnobj.enableDebug()}},'DebugScene');
-        this.gui.add({ getPoint:function (){scnobj.getPoint()}},'getPoint');
-        this.gui.add({ lookAtTarget:function (){scnobj.camera.lookAt(scnobj.camOrigTarget)}},'lookAtTarget');
-        this.gui.add({ freeCamera:function (){scnobj.freeCamera()}},'freeCamera');
-        this.gui.add({ goHome:function (){scnobj.goHome()}},'goHome');
-    };
 
     this.getPoint = function () {
         navigator.clipboard.writeText(JSON.stringify({camera: this.camera.position,target: this.camera.getWorldDirection(new THREE.Vector3(0,0,5)).multiplyScalar(10).add(this.camera.position)}));
@@ -384,23 +383,16 @@ function networkScene(mainDiv,$rootScope,$location,url) {
      * animate
      */
     this.animate = function (time) {
+        if (obj._externalRenderLoop) return;
         requestAnimationFrame(obj.animate);
-        //spot animation
-        //obj.spotAnimation(time);
-        //this.renderer.setAnimationLoop(obj.animate);
         if (obj.controls) {obj.controls.update();}
         obj.render(obj.scnList);
-        //animate children
         if (obj.children)
             for (var i in obj.children)
                 obj.children[i].animate();
-        //TWEEN update
         TWEEN.update();
-        //animate interface ui
         ThreeMeshUI.update();
-        //update buttons by rautracing
         obj.updateButtons();
-        //console.log('3D >> scene >> animate',obj.camera.position,obj.camera.target);
     };
 
     this.buildFromConfig = function (config, base, scene) {
@@ -617,23 +609,28 @@ function networkScene(mainDiv,$rootScope,$location,url) {
      */
     this.animateCamera = function (pos,target,duration=700) {
         var cam= this.camera;
-        var tar = this.camOrigTarget ;
+        var tar = this.camOrigTarget;
+        var ctrl = this.controls;
         console.log('3D >> scene >> animateCamera',pos,target,'from',cam.position,tar);
         var camTween = new TWEEN.Tween(cam.position).to({
             x: pos.x,
             y: pos.y,
             z: pos.z
         }, duration).onUpdate(function () {
-            //console.log('camera',tar);
             cam.lookAt(tar);
+            if (ctrl) { ctrl.target.copy(tar); ctrl.update(); }
+        }).onComplete(function () {
+            if (ctrl) { ctrl.target.copy(tar); ctrl.update(); }
         });
         var camTweenBis = new TWEEN.Tween(tar).to({
             x: target.x,
             y: target.y,
             z: target.z
         }, duration).onUpdate(function () {
-            //console.log('target',tar);
             cam.lookAt(tar);
+            if (ctrl) { ctrl.target.copy(tar); ctrl.update(); }
+        }).onComplete(function () {
+            if (ctrl) { ctrl.target.copy(tar); ctrl.update(); }
         });
         camTweenBis.start();
         camTween.start();
@@ -646,30 +643,25 @@ function networkScene(mainDiv,$rootScope,$location,url) {
      */
     this.freeCamera = function () {
         this.controls = new OrbitControls( this.camera, this.renderer.domElement );
-        this.controls.listenToKeyEvents( window ); // optional
+        this.controls.listenToKeyEvents( window );
 
-        //controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
-
-        this.controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+        this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.05;
 
         this.controls.screenSpacePanning = false;
 
-        this.controls.minDistance = 10;
-        this.controls.maxDistance = 50;
+        this.controls.minDistance = 1;
+        this.controls.maxDistance = 200;
 
-        this.controls.maxPolarAngle = Math.PI / 2;
-        //this.controls = new MapControls( this.camera, this.renderer.domElement );
+        this.controls.maxPolarAngle = Math.PI;
     };
 
     console.log('3D >> scene >> init');
-    //initialisation scene threejs
+    this._mainDiv = mainDiv;
     this.initScene(mainDiv);
     this.scnList.push(this.scene);
 
-    //this.base = new MapItem({type:'container',rotateAxis:'x',colors:[0x888888],name:''},this);
-    //this.scene.add(this.base.threeObj);
-    this.resetCamera();
+    if (mainDiv === 'infra_map') this.resetCamera();
 
 }
 export {networkScene};

@@ -53,7 +53,7 @@ class position  {
                     for (var s in this.list) {
                         //profondeur
                         var depth = this.list[s].getDepth();
-                        console.log(this.consoleprefix + 'move >> scene >> subnet '+s+' getWidth '+lar,this.list[s]);
+                        console.log(this.consoleprefix + 'move >> scene >> subnet '+s+' getDepth '+depth,this.list[s]);
                         if (depth > 0 && depth !== Infinity) {
                             depthtot += depth;
                         }
